@@ -4,7 +4,7 @@
 
 ## Scrap Ring
 
-You start with one robot, Rivet. Deploy Rivet into the ring to fight another robot. Win to earn money and unlock the next level. Before each fight, spend that money on hull, punch, armor, or speed.
+You start with one robot, Rivet. Deploy Rivet into the ring to fight another robot. Win to earn money and unlock the next level. Repair the damage from the last fight, then spend what is left on hull, punch, armor, or speed.
 
 ## איך מתחילים לעבוד
 

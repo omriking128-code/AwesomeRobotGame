@@ -4,14 +4,16 @@ import {
   LEVELS,
   SAVE_KEY,
   UPGRADE_LIST,
-  applyWin,
+  applyFightResult,
   buyUpgrade,
+  canDeploy,
   currentOpponent,
   dodgeChance,
   expectedHit,
   forecast,
   loadSave,
   playerStats,
+  repairRobot,
   resolveFight,
   sellUpgrade,
   starterSave,
@@ -40,6 +42,9 @@ type Match = {
   crowned: boolean
   actions: Action[]
   winner: 'player' | 'enemy'
+  endingHp: number
+  playerMaxHp: number
+  enemyPaint: string
 }
 
 const MUTE_KEY = 'scrap-ring-muted'
@@ -71,9 +76,13 @@ function App() {
   mutedRef.current = muted
 
   const stats = playerStats(save.upgrades)
+  const currentHp = Math.min(save.hp, stats.hp)
+  const damage = Math.max(0, stats.hp - currentHp)
+  const repairedHp = damage === 0 ? stats.hp : save.money <= 0 ? (currentHp <= 0 ? stats.hp : currentHp) : Math.min(stats.hp, currentHp + save.money)
   const opponent = currentOpponent(save.nextLevel)
-  const outlook = forecast(stats, opponent.level)
+  const outlook = forecast({ ...stats, hp: repairedHp }, opponent.level)
   const totalRanks = UPGRADE_LIST.reduce((sum, upgrade) => sum + save.upgrades[upgrade.id], 0)
+  const ready = canDeploy(save)
 
   useEffect(() => {
     localStorage.setItem(SAVE_KEY, JSON.stringify(save))
@@ -93,12 +102,13 @@ function App() {
       return () => window.clearTimeout(timer)
     }
     const timer = window.setTimeout(() => {
-      if (match.winner === 'player' && paidMatch.current !== match) {
+      if (paidMatch.current !== match) {
         paidMatch.current = match
-        setSave((prev) => applyWin(prev, match.reward))
-        if (!mutedRef.current) playWin()
-      } else if (match.winner === 'enemy' && !mutedRef.current) {
-        playLose()
+        setSave((prev) => applyFightResult(prev, match.endingHp, match.winner === 'player' ? match.reward : null))
+        if (!mutedRef.current) {
+          if (match.winner === 'player') playWin()
+          else playLose()
+        }
       }
       setPhase('result')
     }, 720)
@@ -124,9 +134,11 @@ function App() {
   }, [phase, step, match])
 
   function deploy() {
+    if (!canDeploy(save)) return
     unlockAudio()
     const foe = currentOpponent(save.nextLevel)
-    const player: Fighter = { ...playerStats(save.upgrades), name: 'Rivet' }
+    const maxHp = playerStats(save.upgrades).hp
+    const player: Fighter = { ...playerStats(save.upgrades), hp: Math.min(save.hp, maxHp), name: 'Rivet' }
     const enemy: Fighter = {
       name: foe.level.name,
       hp: foe.level.hp,
@@ -139,12 +151,15 @@ function App() {
       player,
       enemy,
       enemyKind: foe.level.kind,
+      enemyPaint: foe.level.paint,
       reward: foe.level.reward,
       levelNumber: foe.number,
       rematch: foe.rematch,
       crowned: !foe.rematch && foe.index === LEVELS.length - 1,
       actions: result.actions,
       winner: result.winner,
+      endingHp: result.playerHp,
+      playerMaxHp: maxHp,
     })
     setStep(0)
     setPhase('fight')
@@ -154,6 +169,17 @@ function App() {
     setPhase('garage')
     setMatch(null)
     setStep(0)
+  }
+
+  function forfeit() {
+    if (!match || paidMatch.current === match) {
+      leave()
+      return
+    }
+    const hpNow = step > 0 ? match.actions[step - 1].playerHp : match.player.hp
+    paidMatch.current = match
+    setSave((prev) => applyFightResult(prev, hpNow, null))
+    leave()
   }
 
   function skip() {
@@ -191,6 +217,12 @@ function App() {
 
   function sell(id: UpgradeId) {
     setSave((current) => sellUpgrade(current, id))
+  }
+
+  function repair() {
+    unlockAudio()
+    if (!muted) playBuy()
+    setSave((current) => repairRobot(current))
   }
 
   const shown = match && step > 0 ? match.actions[step - 1] : undefined
@@ -233,6 +265,8 @@ function App() {
           <Garage
             save={save}
             statsHp={stats.hp}
+            currentHp={currentHp}
+            damage={damage}
             statsAttack={stats.attack}
             statsArmor={stats.armor}
             statsSpeed={stats.speed}
@@ -243,6 +277,7 @@ function App() {
             outlook={outlook}
             onBuy={buy}
             onSell={sell}
+            onRepair={repair}
           />
         ) : match ? (
           <section className="fight">
@@ -261,7 +296,7 @@ function App() {
                 side="player"
                 name="Rivet"
                 hp={playerHp}
-                max={match.player.hp}
+                max={match.playerMaxHp}
                 pose={poseFor('player', shown, playerHp, finished)}
                 kind="player"
                 upgrades={save.upgrades}
@@ -273,6 +308,7 @@ function App() {
                 max={match.enemy.hp}
                 pose={poseFor('enemy', shown, enemyHp, finished)}
                 kind={match.enemyKind}
+                paint={match.enemyPaint}
               />
             </div>
             {phase === 'result' && <ResultCard match={match} nextName={nextOpponentName(match)} />}
@@ -290,10 +326,22 @@ function App() {
 
       <footer className="dock">
         {phase === 'garage' && (
-          <button type="button" className="deploy" data-testid="deploy" onClick={deploy}>
-            <span>{opponent.rematch ? 'Defend your title' : 'Deploy into the ring'}</span>
+          <button type="button" className="deploy" data-testid="deploy" onClick={deploy} disabled={!ready}>
+            <span>
+              {ready
+                ? damage > 0
+                  ? 'Deploy damaged'
+                  : opponent.rematch
+                    ? 'Defend your title'
+                    : 'Deploy into the ring'
+                : 'Repair Rivet first'}
+            </span>
             <small>
-              {opponent.rematch ? 'Rematch' : `Fight ${opponent.number}`} · {opponent.level.name} · win {opponent.level.reward} money
+              {damage > 0
+                ? `Rivet has ${currentHp}/${stats.hp} health · repair costs ${damage}`
+                : opponent.rematch
+                  ? 'Rematch'
+                  : `Fight ${opponent.number} · ${opponent.level.name} · win ${opponent.level.reward} money`}
             </small>
           </button>
         )}
@@ -302,7 +350,7 @@ function App() {
             <button type="button" className="deploy slim" onClick={skip}>
               Skip fight
             </button>
-            <button type="button" className="ghost wide" onClick={leave}>
+            <button type="button" className="ghost wide" onClick={forfeit}>
               Forfeit
             </button>
           </div>
@@ -325,6 +373,8 @@ function nextOpponentName(match: Match): string | null {
 function Garage({
   save,
   statsHp,
+  currentHp,
+  damage,
   statsAttack,
   statsArmor,
   statsSpeed,
@@ -335,9 +385,12 @@ function Garage({
   outlook,
   onBuy,
   onSell,
+  onRepair,
 }: {
   save: Save
   statsHp: number
+  currentHp: number
+  damage: number
   statsAttack: number
   statsArmor: number
   statsSpeed: number
@@ -348,6 +401,7 @@ function Garage({
   outlook: Outlook
   onBuy: (id: UpgradeId) => void
   onSell: (id: UpgradeId) => void
+  onRepair: () => void
 }) {
   const yourHit = expectedHit(statsAttack, opponent.armor)
   const theirHit = expectedHit(opponent.attack, statsArmor)
@@ -361,7 +415,7 @@ function Garage({
         <ol className="primer">
           <li>You start with one simple robot, Rivet.</li>
           <li>Deploy into the ring and fight the other robot.</li>
-          <li>Beat it to earn money, upgrade, then take the next level.</li>
+          <li>Beat it to earn money. Repair Rivet, then upgrade for the next level.</li>
         </ol>
       )}
 
@@ -387,11 +441,28 @@ function Garage({
             <p>{totalRanks === 0 ? 'Plain starter frame' : `Upgraded frame · ${totalRanks} parts`}</p>
           </div>
           <div className="meters">
-            <Meter label="Health" value={statsHp} max={120} testId="stat-hp" />
+            <Meter label="Health" value={currentHp} max={statsHp} text={`${currentHp}/${statsHp}`} testId="stat-hp" />
             <Meter label="Attack" value={statsAttack} max={28} testId="stat-attack" />
             <Meter label="Armor" value={statsArmor} max={12} testId="stat-armor" />
             <Meter label="Speed" value={statsSpeed} max={16} testId="stat-speed" />
           </div>
+          {damage > 0 && (
+            <button
+              type="button"
+              className={save.money >= damage || (save.money === 0 && currentHp === 0) ? 'repair can-afford' : 'repair'}
+              data-testid="repair"
+              disabled={save.money === 0 && currentHp > 0}
+              onClick={onRepair}
+            >
+              {currentHp === 0 && save.money === 0 ? 'Weld Rivet back together' : `Repair · ${damage}`}
+            </button>
+          )}
+          <p className="fine">
+            Damage stays after every fight. Repair Rivet before the next match.
+            {damage > 0 && save.money === 0 && currentHp === 0 ? ' The yard welds a wrecked Rivet for free when you are broke.' : ''}
+            {damage > 0 && save.money === 0 && currentHp > 0 ? ' You have no money left, so Rivet can deploy while hurt.' : ''}
+            {damage > 0 && save.money > 0 && save.money < damage ? ' This repair spends all the money you have.' : ''}
+          </p>
           <p className="fine">A hit deals Attack minus Armor, and at least 1. Faster bots strike first and can dodge.</p>
         </section>
 
@@ -399,7 +470,7 @@ function Garage({
           <section className="panel opponent">
             <div className="opponent-head">
               <div className="preview">
-                <RobotFigure kind={opponent.kind} />
+                <RobotFigure kind={opponent.kind} paint={opponent.paint} />
               </div>
               <div>
                 <p className="eyebrow">{rematch ? 'Title rematch' : `Next fight · ${levelNumber} of ${LEVELS.length}`}</p>
@@ -446,6 +517,7 @@ function Garage({
                     <div className="upgrade-actions">
                       <button
                         type="button"
+                        className={canBuy ? 'can-afford' : undefined}
                         data-testid={`buy-${upgrade.id}`}
                         disabled={!canBuy}
                         onClick={() => onBuy(upgrade.id)}
@@ -469,15 +541,27 @@ function Garage({
   )
 }
 
-function Meter({ label, value, max, testId }: { label: string; value: number; max: number; testId: string }) {
-  const width = Math.min(100, (value / max) * 100)
+function Meter({
+  label,
+  value,
+  max,
+  text,
+  testId,
+}: {
+  label: string
+  value: number
+  max: number
+  text?: string
+  testId: string
+}) {
+  const width = max <= 0 ? 0 : Math.min(100, (value / max) * 100)
   return (
     <div className="meter">
       <span>{label}</span>
       <div className="meter-track">
         <div style={{ width: `${width}%` }} />
       </div>
-      <strong data-testid={testId}>{value}</strong>
+      <strong data-testid={testId}>{text ?? value}</strong>
     </div>
   )
 }
@@ -489,6 +573,7 @@ function FighterSlot({
   max,
   pose,
   kind,
+  paint,
   upgrades,
 }: {
   side: 'player' | 'enemy'
@@ -497,6 +582,7 @@ function FighterSlot({
   max: number
   pose: string
   kind: RobotKind
+  paint?: string
   upgrades?: Save['upgrades']
 }) {
   const pct = Math.max(0, Math.min(100, (hp / max) * 100))
@@ -511,7 +597,7 @@ function FighterSlot({
       </div>
       <div className={`pose ${pose}`}>
         <div className={side === 'enemy' ? 'flip' : undefined}>
-          <RobotFigure kind={kind} upgrades={upgrades} />
+          <RobotFigure kind={kind} paint={paint} upgrades={upgrades} />
         </div>
       </div>
       <p className="fighter-name">{name}</p>
@@ -521,10 +607,12 @@ function FighterSlot({
 
 function ResultCard({ match, nextName }: { match: Match; nextName: string | null }) {
   const win = match.winner === 'player'
-  let detail = 'Rivet is down. Upgrade, sell a part, or deploy again.'
-  if (win && match.crowned) detail = 'Rivet owns the ring. Defend the title whenever you want more money.'
-  else if (win && match.rematch) detail = 'Title defended. The money is yours.'
-  else if (win && nextName) detail = `${nextName} is next. Upgrade Rivet before you deploy.`
+  const missing = Math.max(0, match.playerMaxHp - match.endingHp)
+  const repairNote = missing > 0 ? ` Repair costs ${missing} before the next fight.` : ' Rivet took no damage.'
+  let detail = `Rivet is down.${repairNote}`
+  if (win && match.crowned) detail = `Rivet owns the ring. Defend the title whenever you want more money.${repairNote}`
+  else if (win && match.rematch) detail = `Title defended. The money is yours.${repairNote}`
+  else if (win && nextName) detail = `${nextName} is next.${repairNote}`
 
   return (
     <div className="result" data-testid="result" role="status">

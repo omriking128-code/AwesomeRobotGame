@@ -229,7 +229,7 @@ h3 { margin: 0; font-size: 1.05rem; }
 
 .meter {
   display: grid;
-  grid-template-columns: 72px 1fr 36px;
+  grid-template-columns: 72px 1fr auto;
   gap: 8px;
   align-items: center;
 }
@@ -322,13 +322,28 @@ h3 { margin: 0; font-size: 1.05rem; }
 
 .upgrade-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
-.upgrade button, .fight-actions .ghost {
+.upgrade button, .repair, .fight-actions .ghost {
   border-radius: 12px;
   padding: 8px 10px;
   font-weight: 800;
   color: var(--ink);
   background: #f4ecdf;
 }
+
+.upgrade button.can-afford, .repair.can-afford {
+  color: #1a120b;
+  background: #ffb020;
+  box-shadow: 0 4px 0 #8a4d00;
+}
+
+.upgrade button.can-afford:hover, .repair.can-afford:hover { transform: translateY(-1px); }
+
+.upgrade button.can-afford:active, .repair.can-afford:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #8a4d00;
+}
+
+.repair { width: 100%; margin-top: 12px; }
 
 .upgrade .ghost, .fight-actions .ghost {
   color: #f6efe4;

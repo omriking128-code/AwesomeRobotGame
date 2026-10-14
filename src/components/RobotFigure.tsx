@@ -11,7 +11,7 @@ type Palette = {
   ink: string
 }
 
-const PALETTES: Record<RobotKind, Palette> = {
+const PALETTES: Record<string, Palette> = {
   player: {
     light: '#e7eef5',
     metal: '#8ea6bb',
@@ -74,6 +74,132 @@ const PALETTES: Record<RobotKind, Palette> = {
     trimDark: '#b8892c',
     eye: '#fffef8',
     ink: '#241c0c',
+  },
+  bishop: {
+    light: '#d5efe6',
+    metal: '#3f8f78',
+    dark: '#14352c',
+    trim: '#f2e7c9',
+    trimDark: '#b08948',
+    eye: '#d8fff2',
+    ink: '#071612',
+  },
+  ghoul: {
+    light: '#d7e0c8',
+    metal: '#6e7a62',
+    dark: '#24281e',
+    trim: '#b6f27a',
+    trimDark: '#5e8a22',
+    eye: '#e8ffb0',
+    ink: '#10140c',
+  },
+  hag: {
+    light: '#ffd0a8',
+    metal: '#e06a1a',
+    dark: '#6a2c08',
+    trim: '#ffe08a',
+    trimDark: '#c47a10',
+    eye: '#fff4c8',
+    ink: '#2a1004',
+  },
+  monk: {
+    light: '#e4e0d8',
+    metal: '#8a8680',
+    dark: '#3a3834',
+    trim: '#f4efe4',
+    trimDark: '#8a8070',
+    eye: '#fff8e8',
+    ink: '#161412',
+  },
+  viper: {
+    light: '#e6ff9a',
+    metal: '#7cb518',
+    dark: '#2a4008',
+    trim: '#d6ff4a',
+    trimDark: '#6a9800',
+    eye: '#f4ffb0',
+    ink: '#121c04',
+  },
+  widow: {
+    light: '#f2f4f7',
+    metal: '#9aa3b2',
+    dark: '#2c3340',
+    trim: '#d7deea',
+    trimDark: '#5c6778',
+    eye: '#9be7ff',
+    ink: '#0c1016',
+  },
+  golem: {
+    light: '#ffb088',
+    metal: '#c2410c',
+    dark: '#4a1408',
+    trim: '#ffd0a0',
+    trimDark: '#9a3412',
+    eye: '#ffe08a',
+    ink: '#1c0804',
+  },
+  jackal: {
+    light: '#ffd0f0',
+    metal: '#d946a6',
+    dark: '#6a1450',
+    trim: '#ff8ad4',
+    trimDark: '#a1146a',
+    eye: '#ffe0f6',
+    ink: '#240814',
+  },
+  hymn: {
+    light: '#d4e4ff',
+    metal: '#3b6cb5',
+    dark: '#142848',
+    trim: '#f0d48a',
+    trimDark: '#a07820',
+    eye: '#e8f2ff',
+    ink: '#081018',
+  },
+  maw: {
+    light: '#ffc2b0',
+    metal: '#9f1239',
+    dark: '#3f0a18',
+    trim: '#fb7185',
+    trimDark: '#7f1028',
+    eye: '#ffe0c8',
+    ink: '#1a060c',
+  },
+  saint: {
+    light: '#fff8dc',
+    metal: '#e8c872',
+    dark: '#6a5018',
+    trim: '#fff4c4',
+    trimDark: '#c49a28',
+    eye: '#fffef6',
+    ink: '#241c08',
+  },
+  bell: {
+    light: '#d8c8f0',
+    metal: '#5b3a8c',
+    dark: '#241438',
+    trim: '#c4b0e8',
+    trimDark: '#3a2068',
+    eye: '#e8d8ff',
+    ink: '#100818',
+  },
+  relic: {
+    light: '#d8f0e0',
+    metal: '#2f6f5e',
+    dark: '#102820',
+    trim: '#e7d3a1',
+    trimDark: '#8a7040',
+    eye: '#d8ffe8',
+    ink: '#061410',
+  },
+  crown: {
+    light: '#fff7ea',
+    metal: '#f0d090',
+    dark: '#7a4810',
+    trim: '#ffe566',
+    trimDark: '#e07010',
+    eye: '#fffef8',
+    ink: '#2a1804',
   },
 }
 
@@ -297,14 +423,16 @@ function ApexPrime({ id, pal }: { id: string; pal: Palette }) {
 
 export function RobotFigure({
   kind,
+  paint,
   upgrades = EMPTY_UPGRADES,
 }: {
   kind: RobotKind
+  paint?: string
   upgrades?: Upgrades
 }) {
   const reactId = useId().replace(/:/g, '')
   const id = `bot-${reactId}`
-  const pal = PALETTES[kind]
+  const pal = PALETTES[paint ?? kind] ?? PALETTES[kind]
 
   return (
     <svg className="robot-svg" viewBox="0 0 210 220" role="img" aria-hidden="true">
