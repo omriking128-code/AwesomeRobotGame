@@ -48,7 +48,7 @@ Nothing queued. The parts bench is the current game.
 ## Decisions
 
 - Only one robot. Parts change that robot. They do not add a roster.
-- Levels are linear. You fight the current opponent, then the next.
+- Levels are linear. You fight the current opponent, then the next. Each win pays for a shop upgrade that makes the next fight winnable. The starter kit can beat Bolt Bruiser.
 - Money comes from winning. A loss pays nothing.
 - Rivet starts each fight at full health. Parts keep the wear from the last fight.
 - A hit is power minus armor, at least 1. Some weapons ignore armor, burn, slow, or strike more than once.

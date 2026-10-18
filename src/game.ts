@@ -66,26 +66,26 @@ export const SAVE_KEY = 'scrap-ring-save-v1'
 export const REMATCH_REWARD = 240
 
 export const LEVELS: LevelDef[] = [
-  { name: 'Tin Rat', title: 'Steals bolts', kind: 'rat', paint: 'rat', hp: 22, power: 6, armor: 0, speed: 3, intellect: 2, reward: 40 },
-  { name: 'Bolt Bruiser', title: 'Hits hard', kind: 'bruiser', paint: 'bruiser', hp: 36, power: 12, armor: 2, speed: 4, intellect: 3, reward: 58 },
-  { name: 'Weld Warden', title: 'Shop enforcer', kind: 'warden', paint: 'warden', hp: 50, power: 14, armor: 3, speed: 5, intellect: 4, reward: 78 },
-  { name: 'Coil Reaper', title: 'Very fast', kind: 'reaper', paint: 'reaper', hp: 48, power: 15, armor: 2, speed: 8, intellect: 6, reward: 100 },
-  { name: 'Furnace Knight', title: 'Heavy armor', kind: 'knight', paint: 'knight', hp: 70, power: 17, armor: 5, speed: 5, intellect: 5, reward: 130 },
-  { name: 'Apex Prime', title: 'Owns the ring', kind: 'prime', paint: 'prime', hp: 84, power: 20, armor: 5, speed: 7, intellect: 7, reward: 180 },
-  { name: 'Rust Bishop', title: 'Blesses the bolts', kind: 'warden', paint: 'bishop', hp: 90, power: 18, armor: 4, speed: 6, intellect: 7, reward: 200 },
-  { name: 'Gear Ghoul', title: 'Haunts the pit', kind: 'reaper', paint: 'ghoul', hp: 86, power: 19, armor: 3, speed: 10, intellect: 8, reward: 220 },
-  { name: 'Piston Hag', title: 'Short fuse', kind: 'bruiser', paint: 'hag', hp: 100, power: 21, armor: 5, speed: 6, intellect: 7, reward: 240 },
-  { name: 'Anvil Monk', title: 'Never dodges', kind: 'knight', paint: 'monk', hp: 112, power: 20, armor: 7, speed: 4, intellect: 6, reward: 270 },
-  { name: 'Spark Viper', title: 'Mean and quick', kind: 'rat', paint: 'viper', hp: 96, power: 22, armor: 3, speed: 12, intellect: 9, reward: 300 },
-  { name: 'Chrome Widow', title: 'Spins the coil', kind: 'reaper', paint: 'widow', hp: 108, power: 23, armor: 4, speed: 11, intellect: 9, reward: 330 },
-  { name: 'Slag Golem', title: 'Walks through punches', kind: 'knight', paint: 'golem', hp: 124, power: 22, armor: 8, speed: 4, intellect: 7, reward: 360 },
-  { name: 'Neon Jackal', title: 'Too quick', kind: 'rat', paint: 'jackal', hp: 110, power: 24, armor: 3, speed: 13, intellect: 10, reward: 400 },
-  { name: 'Iron Hymn', title: 'Pit preacher', kind: 'warden', paint: 'hymn', hp: 120, power: 23, armor: 6, speed: 8, intellect: 10, reward: 440 },
-  { name: 'Cinder Maw', title: 'Bites armor', kind: 'bruiser', paint: 'maw', hp: 130, power: 25, armor: 6, speed: 7, intellect: 9, reward: 480 },
-  { name: 'Volt Saint', title: 'Glows before it hits', kind: 'prime', paint: 'saint', hp: 128, power: 26, armor: 5, speed: 10, intellect: 11, reward: 530 },
-  { name: 'Obsidian Bell', title: 'Rings you out', kind: 'knight', paint: 'bell', hp: 142, power: 24, armor: 8, speed: 6, intellect: 10, reward: 580 },
-  { name: 'Scrap Relic', title: 'Last sermon', kind: 'warden', paint: 'relic', hp: 136, power: 27, armor: 6, speed: 9, intellect: 12, reward: 640 },
-  { name: 'Crown Furnace', title: 'The real champion', kind: 'prime', paint: 'crown', hp: 150, power: 28, armor: 7, speed: 10, intellect: 13, reward: 720 },
+  { name: 'Tin Rat', title: 'Steals bolts', kind: 'rat', paint: 'rat', hp: 22, power: 5, armor: 0, speed: 3, intellect: 2, reward: 80 },
+  { name: 'Bolt Bruiser', title: 'Hits hard', kind: 'bruiser', paint: 'bruiser', hp: 34, power: 7, armor: 1, speed: 4, intellect: 3, reward: 70 },
+  { name: 'Weld Warden', title: 'Shop enforcer', kind: 'warden', paint: 'warden', hp: 42, power: 9, armor: 1, speed: 4, intellect: 4, reward: 80 },
+  { name: 'Coil Reaper', title: 'Very fast', kind: 'reaper', paint: 'reaper', hp: 36, power: 9, armor: 0, speed: 7, intellect: 5, reward: 90 },
+  { name: 'Furnace Knight', title: 'Heavy armor', kind: 'knight', paint: 'knight', hp: 46, power: 9, armor: 1, speed: 4, intellect: 5, reward: 100 },
+  { name: 'Apex Prime', title: 'Owns the ring', kind: 'prime', paint: 'prime', hp: 48, power: 9, armor: 1, speed: 5, intellect: 5, reward: 110 },
+  { name: 'Rust Bishop', title: 'Blesses the bolts', kind: 'warden', paint: 'bishop', hp: 52, power: 10, armor: 1, speed: 6, intellect: 6, reward: 120 },
+  { name: 'Gear Ghoul', title: 'Haunts the pit', kind: 'reaper', paint: 'ghoul', hp: 50, power: 10, armor: 0, speed: 8, intellect: 7, reward: 140 },
+  { name: 'Piston Hag', title: 'Short fuse', kind: 'bruiser', paint: 'hag', hp: 64, power: 12, armor: 1, speed: 6, intellect: 7, reward: 160 },
+  { name: 'Anvil Monk', title: 'Never dodges', kind: 'knight', paint: 'monk', hp: 70, power: 11, armor: 3, speed: 4, intellect: 6, reward: 180 },
+  { name: 'Spark Viper', title: 'Mean and quick', kind: 'rat', paint: 'viper', hp: 58, power: 12, armor: 1, speed: 11, intellect: 9, reward: 200 },
+  { name: 'Chrome Widow', title: 'Spins the coil', kind: 'reaper', paint: 'widow', hp: 66, power: 13, armor: 1, speed: 10, intellect: 9, reward: 220 },
+  { name: 'Slag Golem', title: 'Walks through punches', kind: 'knight', paint: 'golem', hp: 84, power: 13, armor: 3, speed: 5, intellect: 8, reward: 240 },
+  { name: 'Neon Jackal', title: 'Too quick', kind: 'rat', paint: 'jackal', hp: 70, power: 14, armor: 1, speed: 12, intellect: 10, reward: 270 },
+  { name: 'Iron Hymn', title: 'Pit preacher', kind: 'warden', paint: 'hymn', hp: 90, power: 15, armor: 2, speed: 8, intellect: 11, reward: 300 },
+  { name: 'Cinder Maw', title: 'Bites armor', kind: 'bruiser', paint: 'maw', hp: 96, power: 16, armor: 2, speed: 8, intellect: 11, reward: 340 },
+  { name: 'Volt Saint', title: 'Glows before it hits', kind: 'prime', paint: 'saint', hp: 100, power: 16, armor: 2, speed: 10, intellect: 13, reward: 380 },
+  { name: 'Obsidian Bell', title: 'Rings you out', kind: 'knight', paint: 'bell', hp: 126, power: 19, armor: 4, speed: 9, intellect: 14, reward: 420 },
+  { name: 'Scrap Relic', title: 'Last sermon', kind: 'warden', paint: 'relic', hp: 130, power: 19, armor: 4, speed: 12, intellect: 15, reward: 460 },
+  { name: 'Crown Furnace', title: 'The real champion', kind: 'prime', paint: 'crown', hp: 132, power: 20, armor: 5, speed: 12, intellect: 15, reward: 520 },
 ]
 
 export function starterSave(): Save {
@@ -185,7 +185,7 @@ function chooseWeapon(
     return { weapon, score }
   })
   scored.sort((a, b) => b.score - a.score)
-  const bestChance = Math.min(0.92, 0.22 + attacker.intellect * 0.05)
+  const bestChance = Math.min(0.94, 0.62 + attacker.intellect * 0.025)
   if (rng() < bestChance) return scored[0].weapon
   return weapons[Math.floor(rng() * weapons.length)]
 }
