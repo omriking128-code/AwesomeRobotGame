@@ -13,6 +13,7 @@ import {
 } from '../parts'
 import { PlayerRig } from './PlayerRig'
 import { SmearPad, SpinBolt, usePointerDrag } from './gestures'
+import { DragChip } from '../pixel'
 import { playBoot, playSnap, playWire } from '../sound'
 
 const ZONES: { id: string; bit: number; label: string }[] = [
@@ -202,10 +203,14 @@ export function BuildBench({
           <StepCopy title="Drag the processor" body="Drop it in the socket on Rivet’s chest.">
             {owned('processor').length === 0 && <p className="fine">Buy a processor in the part shop.</p>}
             {owned('processor').map((item) => (
-              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'processor', uid: item.uid, name: catalog(item.id).name })}>
-                <strong>{catalog(item.id).name}</strong>
-                <span>Drag onto the chest</span>
-              </div>
+              <DragChip
+                key={item.uid}
+                icon={item.id}
+                testId={`drag-${item.id}`}
+                title={catalog(item.id).name}
+                hint="Drag onto the chest"
+                onPointerDown={(event) => begin(event, { kind: 'processor', uid: item.uid, name: catalog(item.id).name, icon: item.id })}
+              />
             ))}
           </StepCopy>
         )}
@@ -216,19 +221,26 @@ export function BuildBench({
         )}
         {step === 'processor' && phase === 'cool' && (
           <StepCopy title="Seat the cooler" body="Drag the cooler onto the pasted processor.">
-            <div className="chip" data-testid="drag-cooler" onPointerDown={(event) => begin(event, { kind: 'cooler', name: 'Cooler' })}>
-              <strong>Cooler</strong>
-              <span>Drag it onto the chip</span>
-            </div>
+            <DragChip
+              icon="cooler"
+              testId="drag-cooler"
+              title="Cooler"
+              hint="Drag it onto the chip"
+              onPointerDown={(event) => begin(event, { kind: 'cooler', name: 'Cooler', icon: 'cooler' })}
+            />
           </StepCopy>
         )}
         {step === 'wheels' && !assembly.wheelUid && (
           <StepCopy title="Bring the wheels" body="Drag a set of wheels onto the axle, then spin the bolts.">
             {owned('wheels').map((item) => (
-              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'wheels', uid: item.uid, name: catalog(item.id).name })}>
-                <strong>{catalog(item.id).name}</strong>
-                <span>Drag onto the axle</span>
-              </div>
+              <DragChip
+                key={item.uid}
+                icon={item.id}
+                testId={`drag-${item.id}`}
+                title={catalog(item.id).name}
+                hint="Drag onto the axle"
+                onPointerDown={(event) => begin(event, { kind: 'wheels', uid: item.uid, name: catalog(item.id).name, icon: item.id })}
+              />
             ))}
           </StepCopy>
         )}
@@ -241,26 +253,37 @@ export function BuildBench({
           <StepCopy title="Drag the weapons on" body={`This processor has ${slots} ports. Drag a weapon onto the open hardpoint. Every weapon you own, up to that limit, has to go on.`}>
             {looseWeapons.length === 0 && <p className="fine">Buy a weapon in the part shop.</p>}
             {looseWeapons.map((item) => (
-              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'weapon', uid: item.uid, name: catalog(item.id).name })}>
-                <strong>{catalog(item.id).name}</strong>
-                <span>Drag onto the hardpoint</span>
-              </div>
+              <DragChip
+                key={item.uid}
+                icon={item.id}
+                testId={`drag-${item.id}`}
+                title={catalog(item.id).name}
+                hint="Drag onto the hardpoint"
+                onPointerDown={(event) => begin(event, { kind: 'weapon', uid: item.uid, name: catalog(item.id).name, icon: item.id })}
+              />
             ))}
           </StepCopy>
         )}
         {step === 'gpu' && !assembly.gpuUid && !assembly.gpuSkipped && (
           <StepCopy title="Seat the GPU" body={owned('gpu').length ? 'Drag the card into the bay on Rivet’s side.' : 'No GPU in the bin. Drag the bay cover over the empty slot, or buy a card in the part shop.'}>
             {owned('gpu').map((item) => (
-              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'gpu', uid: item.uid, name: catalog(item.id).name })}>
-                <strong>{catalog(item.id).name}</strong>
-                <span>Drag into the bay</span>
-              </div>
+              <DragChip
+                key={item.uid}
+                icon={item.id}
+                testId={`drag-${item.id}`}
+                title={catalog(item.id).name}
+                hint="Drag into the bay"
+                onPointerDown={(event) => begin(event, { kind: 'gpu', uid: item.uid, name: catalog(item.id).name, icon: item.id })}
+              />
             ))}
             {owned('gpu').length === 0 && (
-              <div className="chip" data-testid="drag-bay-cover" onPointerDown={(event) => begin(event, { kind: 'cover', name: 'Bay cover' })}>
-                <strong>Bay cover</strong>
-                <span>Drag over the empty slot</span>
-              </div>
+              <DragChip
+                icon="bay-cover"
+                testId="drag-bay-cover"
+                title="Bay cover"
+                hint="Drag over the empty slot"
+                onPointerDown={(event) => begin(event, { kind: 'cover', name: 'Bay cover', icon: 'bay-cover' })}
+              />
             )}
           </StepCopy>
         )}
@@ -272,10 +295,14 @@ export function BuildBench({
         {step === 'os' && !assembly.osUid && (
           <StepCopy title="Slide in the OS" body="Drag the cartridge into the head. It boots itself.">
             {owned('os').map((item) => (
-              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'os', uid: item.uid, name: catalog(item.id).name })}>
-                <strong>{catalog(item.id).name}</strong>
-                <span>Drag into the head</span>
-              </div>
+              <DragChip
+                key={item.uid}
+                icon={item.id}
+                testId={`drag-${item.id}`}
+                title={catalog(item.id).name}
+                hint="Drag into the head"
+                onPointerDown={(event) => begin(event, { kind: 'os', uid: item.uid, name: catalog(item.id).name, icon: item.id })}
+              />
             ))}
           </StepCopy>
         )}
@@ -287,10 +314,14 @@ export function BuildBench({
         {step === 'shell' && (
           <StepCopy title="Drag the frame on" body="Pick up a shell and drag it across the chest, both shoulders, and the head.">
             {owned('material').map((item) => (
-              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'skin', uid: item.uid, name: catalog(item.id).name })}>
-                <strong>{catalog(item.id).name}</strong>
-                <span>Drag across the whole body</span>
-              </div>
+              <DragChip
+                key={item.uid}
+                icon={item.id}
+                testId={`drag-${item.id}`}
+                title={catalog(item.id).name}
+                hint="Drag across the whole body"
+                onPointerDown={(event) => begin(event, { kind: 'skin', uid: item.uid, name: catalog(item.id).name, icon: item.id })}
+              />
             ))}
           </StepCopy>
         )}

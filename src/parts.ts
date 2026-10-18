@@ -68,6 +68,9 @@ export type RobotLook = {
   core: boolean
   cooled: boolean
   visor: number
+  processorId: string | null
+  gpuId: string | null
+  covered: number
 }
 
 export type RigStats = {
@@ -210,10 +213,10 @@ export function emptyAssembly(): Assembly {
 
 export function hardpoint(index: number, count: number): { x: number; y: number } {
   const fixed = [
-    { x: 176, y: 100 },
-    { x: 160, y: 78 },
-    { x: 34, y: 106 },
-    { x: 34, y: 80 },
+    { x: 168, y: 104 },
+    { x: 156, y: 78 },
+    { x: 36, y: 108 },
+    { x: 48, y: 80 },
   ]
   if (index < fixed.length && count <= fixed.length) return fixed[index]
   const angle = (index / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2
@@ -247,6 +250,11 @@ export function isInstalled(assembly: Assembly, uid: string): boolean {
 
 export function sellValue(price: number): number {
   return Math.round(price * 0.75)
+}
+
+export function repairCost(price: number, durability: number): number {
+  if (durability <= 0 || durability >= 100) return 0
+  return Math.max(1, Math.round((price * (100 - durability)) / 200))
 }
 
 export function repairLabel(kind: PartKind): string {
@@ -325,6 +333,8 @@ export function robotLook(parts: OwnedPart[], assembly: Assembly): RobotLook {
   const shell = partByUid(parts, assembly.materialUid)
   const wheels = partByUid(parts, assembly.wheelUid)
   const os = partByUid(parts, assembly.osUid)
+  const processor = partByUid(parts, assembly.processorUid)
+  const gpu = partByUid(parts, assembly.gpuUid)
   const weapons = assembly.weaponUids
     .map((uid) => partByUid(parts, uid))
     .filter((item): item is OwnedPart => Boolean(item))
@@ -340,6 +350,9 @@ export function robotLook(parts: OwnedPart[], assembly: Assembly): RobotLook {
     core: Boolean(assembly.processorUid),
     cooled: assembly.cooled,
     visor: os && assembly.osInstalled ? catalog(os.id).visor : 0,
+    processorId: processor ? processor.id : null,
+    gpuId: gpu ? gpu.id : null,
+    covered: assembly.covered,
   }
 }
 
@@ -400,8 +413,11 @@ export function sellPart<T extends Bench>(save: T, uid: string): T {
 export function repairPart<T extends Bench>(save: T, uid: string): T {
   const owned = partByUid(save.parts, uid)
   if (!owned || owned.durability <= 0 || owned.durability >= 100) return save
+  const cost = repairCost(catalog(owned.id).price, owned.durability)
+  if (save.money < cost) return save
   return {
     ...save,
+    money: save.money - cost,
     parts: save.parts.map((item) => (item.uid === uid ? { ...item, durability: 100 } : item)),
   }
 }

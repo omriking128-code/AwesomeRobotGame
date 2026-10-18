@@ -24,8 +24,8 @@ There are twenty fights. Each win unlocks a harder robot and pays money. Rivet s
 - Each weapon has its own animation and its own way of dealing damage.
 - Win to earn money and unlock the next level. Lose and you stay on that level.
 - Drag the processor in, smear thermal paste, and seat a cooler. Spin the wheel bolts. Drag weapons, the GPU, and the frame into place. The OS boots on its own.
-- Repairs are hands-on: scrub, spin, hone, weld, or reseat. None of them are a single click, and none of them cost money.
-- Parts wear out. Each kind has its own repair, and the repair is free. A dead part must be replaced.
+- Repairs are hands-on: scrub, spin, hone, weld, or reseat. None of them are a single click. The price is half the part’s cost, scaled by how much durability it lost.
+- Parts wear out. Each kind has its own repair. A dead part must be replaced.
 - Selling a part returns 75% of the price.
 
 ## Later ideas

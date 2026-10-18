@@ -36,6 +36,7 @@ import {
   unequip,
 } from './parts'
 import { playBuy, playDodge, playDown, playHit, playLose, playWin, unlockAudio } from './sound'
+import { PartIcon } from './pixel'
 
 type Phase = 'pit' | 'shop' | 'build' | 'repair' | 'fight' | 'result'
 
@@ -435,7 +436,7 @@ function Pit({
         <ol className="primer">
           <li>The shop gave you a starter pile of parts.</li>
           <li>Build Rivet: wire the weapons, boot the OS, then close the shell.</li>
-          <li>Win money, buy better parts, and repair whatever the fight breaks.</li>
+          <li>Win money, buy better parts, and pay to repair what the fight breaks.</li>
         </ol>
       )}
       <div className="garage-grid">
@@ -460,6 +461,7 @@ function Pit({
               if (!part) return null
               return (
                 <li key={uid} className={part.durability <= 30 ? 'bad' : ''}>
+                  <PartIcon id={part.id} size={32} />
                   {catalog(part.id).name}
                   <b>{part.durability}%</b>
                 </li>

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { iconMarkup } from '../pixel'
 
 export type PointerDrag = {
   kind: string
   uid: string
   name: string
+  icon: string
   x: number
   y: number
   ox: number
@@ -35,8 +37,19 @@ export function usePointerDrag(handlers: {
         ghost.hidden = false
         ghost.style.left = `${current.x}px`
         ghost.style.top = `${current.y}px`
-        ghost.textContent = current.kind === 'wire' ? '' : current.name
         ghost.className = current.kind === 'wire' ? 'drag-ghost wire-ghost' : 'drag-ghost chip-ghost'
+        ghost.replaceChildren()
+        if (current.kind !== 'wire' && current.icon) {
+          const art = document.createElement('span')
+          art.className = 'ghost-art'
+          art.innerHTML = iconMarkup(current.icon)
+          ghost.append(art)
+        }
+        if (current.kind !== 'wire') {
+          const label = document.createElement('span')
+          label.textContent = current.name
+          ghost.append(label)
+        }
       }
       if (line && current.kind === 'wire') {
         line.style.display = 'block'
@@ -81,13 +94,14 @@ export function usePointerDrag(handlers: {
     }
   }, [])
 
-  function begin(event: ReactPointerEvent, spec: { kind: string; uid?: string; name: string }) {
+  function begin(event: ReactPointerEvent, spec: { kind: string; uid?: string; name: string; icon?: string }) {
     event.preventDefault()
     const rect = event.currentTarget.getBoundingClientRect()
     const next: DragInternal = {
       kind: spec.kind,
       uid: spec.uid ?? '',
       name: spec.name,
+      icon: spec.icon ?? '',
       x: event.clientX,
       y: event.clientY,
       ox: rect.left + rect.width / 2,

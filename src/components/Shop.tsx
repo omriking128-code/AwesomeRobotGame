@@ -9,6 +9,7 @@ import {
   sellValue,
   type PartKind,
 } from '../parts'
+import { PartIcon } from '../pixel'
 
 export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) => void; onSell: (uid: string) => void }) {
   const [kind, setKind] = useState<PartKind>('processor')
@@ -16,7 +17,7 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
   return (
     <section className="shop" data-testid="shop">
       <h2>Part shop</h2>
-      <p className="fine">Buy parts here, then drag them onto Rivet on the build bench. Selling returns 75% of the price. Repairs are free until a part dies.</p>
+      <p className="fine">Buy parts here, then drag them onto Rivet. A repair costs half the part’s price, scaled by how broken it is. A dead part has to be replaced. Selling returns 75%.</p>
       <div className="tab-row" role="tablist">
         {PART_KINDS.map((item) => (
           <button
@@ -38,6 +39,8 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
           const canBuy = save.money >= item.price
           return (
             <article key={item.id} className="part-card">
+              <PartIcon id={item.id} />
+              <div className="part-copy">
               <header>
                 <h3>{item.name}</h3>
                 <p>{item.blurb}</p>
@@ -71,6 +74,7 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
                   </div>
                 )
               })}
+              </div>
             </article>
           )
         })}
