@@ -4,7 +4,7 @@
 
 ## Scrap Ring
 
-You start with one robot, Rivet. Deploy Rivet into the ring to fight another robot. Win to earn money and unlock the next level. Repair the damage from the last fight, then spend what is left on hull, punch, armor, or speed.
+You start with a pile of parts. Build Rivet on the bench: seat a processor, mount wheels, place and wire weapons, install an OS, and cover the frame with material. A GPU is optional. Win fights to buy better parts. Worn parts need their own repair. Dead parts have to be replaced. Selling a part returns 75% of its price.
 
 ## איך מתחילים לעבוד
 

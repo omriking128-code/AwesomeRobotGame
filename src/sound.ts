@@ -50,3 +50,19 @@ export function playLose() {
 export function playBuy() {
   tone(680, 0.07, 'square', 0.03)
 }
+
+export function playSnap() {
+  tone(420, 0.05, 'square', 0.04)
+  tone(880, 0.04, 'triangle', 0.03)
+}
+
+export function playWire() {
+  tone(520, 0.07, 'sawtooth', 0.025)
+  tone(760, 0.05, 'square', 0.02)
+}
+
+export function playBoot() {
+  ;[330, 440, 660].forEach((freq, index) => {
+    window.setTimeout(() => tone(freq, 0.08, 'square', 0.03), index * 70)
+  })
+}

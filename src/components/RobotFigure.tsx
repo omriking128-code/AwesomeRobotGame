@@ -1,5 +1,7 @@
 import { useId } from 'react'
-import type { RobotKind, Upgrades } from '../game'
+import type { RobotKind } from '../game'
+
+type Upgrades = { hull: number; fist: number; plate: number; servo: number }
 
 type Palette = {
   light: string

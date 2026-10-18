@@ -6,11 +6,11 @@ Scrap Ring
 
 ## One sentence
 
-Deploy your starter robot, Rivet, into the ring, beat the other robot, and spend the money on upgrades before the next level.
+Build Rivet from shop parts, wire the robot together, and spend winnings on better parts and repairs.
 
 ## What the player does over and over
 
-Check the next opponent, buy upgrades with money from wins, then deploy Rivet into the ring.
+Check the next opponent, buy parts, build or repair Rivet, then deploy into the ring.
 
 ## Why come back
 
@@ -18,10 +18,13 @@ There are twenty fights. Each win unlocks a harder robot and pays money. Rivet s
 
 ## First version
 
-- One robot, Rivet, with health, attack, armor, and speed.
-- Deploy into the ring and watch the fight.
+- Rivet is built from a processor, weapons, wheels, material, an OS, and an optional GPU.
+- The processor sets speed, intelligence, and how many weapons can be wired, from 2 up to 12.
+- Intelligence raises the chance to hit and to dodge, and a smarter processor picks the better weapon.
+- Each weapon has its own animation and its own way of dealing damage.
 - Win to earn money and unlock the next level. Lose and you stay on that level.
-- Before each fight, spend money on hull, punch, armor, or speed. Sell a part back if you want the money.
+- Parts wear out. Each kind has its own repair. A dead part must be replaced.
+- Selling a part returns 75% of the price.
 
 ## Later ideas
 
@@ -33,18 +36,19 @@ There are twenty fights. Each win unlocks a harder robot and pays money. Rivet s
 
 - Garage, twenty-level ladder, and champion rematch.
 - Turn-by-turn fights with dodge, damage, and a skip button.
-- Upgrades paid for with money from finished levels.
+- Parts shop, build bench, and a repair method for every kind of part.
 - Progress saved in the browser.
 
 ## Next build
 
-One special move Rivet can fire once per fight.
+Nothing queued. The parts bench is the current game.
 
 ## Decisions
 
-- Only one robot. Upgrades change that robot. They do not add a roster.
+- Only one robot. Parts change that robot. They do not add a roster.
 - Levels are linear. You fight the current opponent, then the next.
 - Money comes from winning. A loss pays nothing.
-- Rivet keeps the health left at the end of a fight. Pay 1 money per missing health to repair before the next deploy. A wrecked Rivet with no money can be welded back for free. If you spent every coin and Rivet is still hurt, you may deploy damaged.
-- A hit is attack minus armor, at least 1. Faster robots strike first and can dodge slower ones.
-- Selling an upgrade refunds what that rank cost, so a bad build is not a trap.
+- Rivet starts each fight at full health. Parts keep the wear from the last fight.
+- A hit is power minus armor, at least 1. Some weapons ignore armor, burn, slow, or strike more than once.
+- Faster robots strike first. Intelligence changes hit chance, dodge chance, and weapon choice.
+- Selling a part returns 75% of what it cost. A dead part cannot be repaired. It has to be replaced.

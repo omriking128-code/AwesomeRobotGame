@@ -627,8 +627,174 @@ h3 { margin: 0; font-size: 1.05rem; }
   to { transform: translateY(120px) rotate(80deg); opacity: 0; }
 }
 
+.tab-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.tab, .buy, .slot {
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 800;
+  color: #f6efe4;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+}
+.tab.on, .buy.can-afford, .slot.filled, .slot.lit {
+  color: #1a120b;
+  background: #ffb020;
+  border-color: #ffb020;
+}
+.buy.can-afford { box-shadow: 0 4px 0 #8a4d00; }
+.buy:disabled, .slot:disabled { opacity: 0.45; }
+.catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.repair-list { display: grid; gap: 10px; align-content: start; }
+.part-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+.part-card p { margin: 0; color: #d9cbb8; }
+.stat-line, .tiny-note { font-size: 0.85rem; }
+.owned-row, .part-pills { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.part-pills { margin: 12px 0 0; padding: 0; list-style: none; }
+.part-pills li, .owned-row {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.82rem;
+}
+.part-pills li.bad { color: #ff8d7a; }
+.part-pills b { margin-left: 6px; }
+.dur { display: block; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.dur i { display: block; height: 100%; background: var(--mint); }
+.dur.worn i { background: var(--amber); }
+.dur.bad i { background: #ff5a3c; }
+.ghost.tiny { padding: 4px 8px; border-radius: 999px; }
+.build, .repair-bench {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 280px;
+  gap: 14px;
+  align-items: start;
+}
+.checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checklist li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  color: #cbbba8;
+}
+.checklist .done { color: var(--mint); }
+.checklist .now { color: #1a120b; background: var(--amber); border-color: var(--amber); }
+.checklist .locked { opacity: 0.55; }
+.stage {
+  position: relative;
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 196, 92, 0.2), transparent 42%),
+    #17110d;
+}
+.stage .robot-svg { width: min(260px, 70%); }
+.ready-banner {
+  position: absolute;
+  bottom: 16px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: #1a120b;
+  font-weight: 800;
+}
+.cables { position: absolute; inset: 12% 18% auto; display: flex; gap: 8px; }
+.cables i {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: #7dfff2;
+  transform-origin: left center;
+  animation: wire-draw 0.35s ease;
+}
+.step-panel, .job {
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.step-actions { display: grid; gap: 8px; margin-top: 10px; }
+.slot-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot.plate { cursor: pointer; }
+.boot-lines { margin: 8px 0 0; color: #d9cbb8; }
+.repair-bench { grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr); }
+.repair-list { align-content: start; }
+.mini-stats { grid-template-columns: repeat(5, 1fr); }
+.weapon-fx {
+  position: absolute;
+  left: 46%;
+  top: 42%;
+  z-index: 3;
+  pointer-events: none;
+}
+.fx-punch, .fx-hammer, .fx-drill, .fx-spike, .fx-hook {
+  width: 18px; height: 18px; margin: -9px;
+  background: #fff4cc;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: spark 0.35s ease forwards;
+}
+.fx-welder, .fx-tesla {
+  width: 90px; height: 4px; background: #7dfff2; box-shadow: 0 0 12px #7dfff2;
+  animation: beam-line 0.35s ease forwards;
+}
+.fx-cannon, .fx-slag {
+  width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: #ffb020;
+  animation: blast-pop 0.4s ease forwards;
+}
+.fx-vent {
+  width: 30px; height: 40px;
+  background: radial-gradient(circle, #ffb020, transparent 70%);
+  animation: flame-pop 0.45s ease forwards;
+}
+.fx-saw, .fx-blades {
+  width: 24px; height: 24px; margin: -12px; border-radius: 50%; border: 3px solid #ff5a1f;
+  animation: saw-pop 0.35s linear forwards;
+}
+.pose.attack.w-punch { animation: lunge-right 0.42s ease; }
+.pose.attack.w-saw, .pose.attack.w-blades { animation: blade-flurry 0.45s ease; }
+.pose.attack.w-welder, .pose.attack.w-tesla { animation: beam-flash 0.4s ease; }
+.pose.attack.w-cannon, .pose.attack.w-slag { animation: cannon-recoil 0.42s ease; }
+.pose.attack.w-drill, .pose.attack.w-spike { animation: drill-thrust 0.4s ease; }
+.pose.attack.w-vent { animation: flame-rise 0.45s ease; }
+.pose.attack.w-hook { animation: hook-yank 0.45s ease; }
+.pose.attack.w-hammer { animation: hammer-slam 0.5s ease; }
+
+@keyframes wire-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes beam-line { from { transform: scaleX(0.2); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
+@keyframes blast-pop { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+@keyframes flame-pop { from { transform: translateY(8px); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }
+@keyframes saw-pop { from { transform: rotate(0); opacity: 1; } to { transform: rotate(180deg); opacity: 0; } }
+@keyframes beam-flash { 30% { filter: brightness(1.8); transform: translateX(20px); } 100% { filter: none; transform: none; } }
+@keyframes cannon-recoil { 30% { transform: translateX(-18px); } 100% { transform: none; } }
+@keyframes drill-thrust { 45% { transform: translateX(36px); } 100% { transform: none; } }
+@keyframes flame-rise { 40% { transform: translate(24px, -10px); } 100% { transform: none; } }
+@keyframes hook-yank { 40% { transform: translateX(16px); } 70% { transform: translateX(30px); } 100% { transform: none; } }
+@keyframes blade-flurry {
+  20% { transform: translateX(16px) rotate(6deg); }
+  45% { transform: translateX(28px) rotate(-4deg); }
+  100% { transform: none; }
+}
+@keyframes hammer-slam {
+  35% { transform: translate(10px, -14px) rotate(-8deg); }
+  60% { transform: translate(24px, 4px); }
+  100% { transform: none; }
+}
+
 @media (max-width: 860px) {
-  .garage-grid, .primer, .upgrade-grid { grid-template-columns: 1fr; }
+  .garage-grid, .primer, .upgrade-grid, .build, .repair-bench { grid-template-columns: 1fr; }
   .topbar { flex-direction: column; align-items: flex-start; }
   .ring { min-height: 380px; padding-inline: 6px; }
   .robot-svg { width: min(180px, 42vw); }
