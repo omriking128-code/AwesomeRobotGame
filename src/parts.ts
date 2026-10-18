@@ -39,17 +39,22 @@ export type OwnedPart = {
 
 export type Assembly = {
   processorUid: string | null
+  paste: number
+  cooled: boolean
   wheelUid: string | null
+  wheelBolts: number
   materialUid: string | null
   osUid: string | null
   gpuUid: string | null
   gpuSkipped: boolean
+  gpuWired: boolean
   weaponUids: string[]
   wiredUids: string[]
   weaponsPlaced: boolean
   wheelsMounted: boolean
   osInstalled: boolean
   plates: number
+  covered: number
 }
 
 export type RobotLook = {
@@ -59,7 +64,9 @@ export type RobotLook = {
   wheelsOn: boolean
   weaponIds: string[]
   gpu: boolean
+  gpuWired: boolean
   core: boolean
+  cooled: boolean
   visor: number
 }
 
@@ -182,18 +189,35 @@ export function partsOf(kind: PartKind): CatalogPart[] {
 export function emptyAssembly(): Assembly {
   return {
     processorUid: null,
+    paste: 0,
+    cooled: false,
     wheelUid: null,
+    wheelBolts: 0,
     materialUid: null,
     osUid: null,
     gpuUid: null,
     gpuSkipped: false,
+    gpuWired: false,
     weaponUids: [],
     wiredUids: [],
     weaponsPlaced: false,
     wheelsMounted: false,
     osInstalled: false,
     plates: 0,
+    covered: 0,
   }
+}
+
+export function hardpoint(index: number, count: number): { x: number; y: number } {
+  const fixed = [
+    { x: 176, y: 100 },
+    { x: 160, y: 78 },
+    { x: 34, y: 106 },
+    { x: 34, y: 80 },
+  ]
+  if (index < fixed.length && count <= fixed.length) return fixed[index]
+  const angle = (index / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2
+  return { x: 105 + Math.cos(angle) * 78, y: 112 + Math.sin(angle) * 68 }
 }
 
 export function starterParts(): OwnedPart[] {
@@ -308,11 +332,13 @@ export function robotLook(parts: OwnedPart[], assembly: Assembly): RobotLook {
   return {
     shell: shell ? catalog(shell.id).shell : 'frame',
     plates: assembly.plates,
-    wheel: wheels && assembly.wheelsMounted ? catalog(wheels.id).wheel : 0,
-    wheelsOn: assembly.wheelsMounted,
+    wheel: wheels ? catalog(wheels.id).wheel : 0,
+    wheelsOn: Boolean(assembly.wheelUid),
     weaponIds: weapons,
     gpu: Boolean(assembly.gpuUid),
+    gpuWired: assembly.gpuWired,
     core: Boolean(assembly.processorUid),
+    cooled: assembly.cooled,
     visor: os && assembly.osInstalled ? catalog(os.id).visor : 0,
   }
 }
@@ -325,15 +351,15 @@ export function processorSlots(parts: OwnedPart[], assembly: Assembly): number {
 export function buildBlockers(parts: OwnedPart[], assembly: Assembly): string[] {
   const blockers: string[] = []
   const processor = partByUid(parts, assembly.processorUid)
-  if (!processor) blockers.push('Seat a processor')
+  if (!processor || assembly.paste < 100 || !assembly.cooled) blockers.push('Seat the processor, paste it, and add the cooler')
   else if (processor.durability <= 0) blockers.push('The processor is dead')
   const wheels = partByUid(parts, assembly.wheelUid)
-  if (!wheels || !assembly.wheelsMounted) blockers.push('Mount the wheels')
+  if (!wheels || !assembly.wheelsMounted || assembly.wheelBolts < 2) blockers.push('Spin the wheel bolts on')
   else if (wheels.durability <= 0) blockers.push('The wheels are dead')
-  if (!assembly.weaponsPlaced || assembly.weaponUids.length === 0) blockers.push('Place at least one weapon')
+  if (!assembly.weaponsPlaced || assembly.weaponUids.length === 0) blockers.push('Drag on at least one weapon')
   else if (assembly.weaponUids.some((uid) => !assembly.wiredUids.includes(uid))) blockers.push('Wire every weapon')
   else if (armedWeapons(parts, assembly).length === 0) blockers.push('Every weapon is dead')
-  if (!assembly.gpuSkipped && !assembly.gpuUid) blockers.push('Install a GPU or leave the slot empty')
+  if (!assembly.gpuSkipped && !(assembly.gpuUid && assembly.gpuWired)) blockers.push('Drag in a GPU and wire it, or close the bay')
   else if (assembly.gpuUid && (partByUid(parts, assembly.gpuUid)?.durability ?? 0) <= 0) blockers.push('The GPU is dead')
   const os = partByUid(parts, assembly.osUid)
   if (!os || !assembly.osInstalled) blockers.push('Install an operating system')
@@ -385,13 +411,18 @@ export function unequip(assembly: Assembly, uid: string): Assembly {
   return {
     ...assembly,
     processorUid: assembly.processorUid === uid ? null : assembly.processorUid,
+    paste: assembly.processorUid === uid ? 0 : assembly.paste,
+    cooled: assembly.processorUid === uid ? false : assembly.cooled,
     wheelUid: assembly.wheelUid === uid ? null : assembly.wheelUid,
+    wheelBolts: assembly.wheelUid === uid ? 0 : assembly.wheelBolts,
     wheelsMounted: assembly.wheelUid === uid ? false : assembly.wheelsMounted,
     materialUid: assembly.materialUid === uid ? null : assembly.materialUid,
     plates: assembly.materialUid === uid ? 0 : assembly.plates,
+    covered: assembly.materialUid === uid ? 0 : assembly.covered,
     osUid: assembly.osUid === uid ? null : assembly.osUid,
     osInstalled: assembly.osUid === uid ? false : assembly.osInstalled,
     gpuUid: assembly.gpuUid === uid ? null : assembly.gpuUid,
+    gpuWired: assembly.gpuUid === uid ? false : assembly.gpuWired,
     gpuSkipped: assembly.gpuUid === uid ? false : assembly.gpuSkipped,
     weaponUids,
     wiredUids: assembly.wiredUids.filter((item) => item !== uid && weaponUids.includes(item)),
@@ -421,24 +452,22 @@ export function applyWear<T extends Bench>(save: T, hitsTaken: number, firedUids
   }
 }
 
-export type BuildStep = 'processor' | 'wheels' | 'weapons' | 'wire' | 'gpu' | 'os' | 'shell'
+export type BuildStep = 'processor' | 'wheels' | 'weapons' | 'gpu' | 'os' | 'shell'
 
 export const BUILD_STEPS: { id: BuildStep; label: string }[] = [
-  { id: 'processor', label: 'Drag in the processor' },
-  { id: 'wheels', label: 'Mount the wheels' },
-  { id: 'weapons', label: 'Place the weapons' },
-  { id: 'wire', label: 'Drag the wires' },
-  { id: 'gpu', label: 'Install the GPU' },
-  { id: 'os', label: 'Install the OS' },
-  { id: 'shell', label: 'Cover with material' },
+  { id: 'processor', label: 'Paste and cool the processor' },
+  { id: 'wheels', label: 'Spin on the wheels' },
+  { id: 'weapons', label: 'Drag on the weapons' },
+  { id: 'gpu', label: 'Seat and wire the GPU' },
+  { id: 'os', label: 'Boot the OS' },
+  { id: 'shell', label: 'Drag the frame on' },
 ]
 
 export function stepDone(assembly: Assembly, step: BuildStep): boolean {
-  if (step === 'processor') return Boolean(assembly.processorUid)
-  if (step === 'wheels') return Boolean(assembly.wheelUid && assembly.wheelsMounted)
+  if (step === 'processor') return Boolean(assembly.processorUid && assembly.paste >= 100 && assembly.cooled)
+  if (step === 'wheels') return Boolean(assembly.wheelUid && assembly.wheelsMounted && assembly.wheelBolts >= 2)
   if (step === 'weapons') return assembly.weaponsPlaced && assembly.weaponUids.length > 0
-  if (step === 'wire') return assembly.weaponUids.length > 0 && assembly.weaponUids.every((uid) => assembly.wiredUids.includes(uid))
-  if (step === 'gpu') return assembly.gpuSkipped || Boolean(assembly.gpuUid)
+  if (step === 'gpu') return assembly.gpuSkipped || Boolean(assembly.gpuUid && assembly.gpuWired)
   if (step === 'os') return Boolean(assembly.osUid && assembly.osInstalled)
   return Boolean(assembly.materialUid && assembly.plates >= 4)
 }

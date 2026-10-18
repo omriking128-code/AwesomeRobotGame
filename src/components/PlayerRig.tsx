@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import type { RobotLook } from '../parts'
+import { hardpoint, type RobotLook } from '../parts'
 
 type Shell = { light: string; metal: string; dark: string; trim: string; eye: string }
 
@@ -105,7 +105,19 @@ export function PlayerRig({ look }: { look: RobotLook }) {
           <circle className="eye" cx="107" cy="124" r="4" fill={pal.eye} filter={`url(#${id}-glow)`} />
         </>
       )}
+      {look.cooled && (
+        <g>
+          <rect x="90" y="108" width="34" height="8" rx="2" fill="#c5d0dc" />
+          <rect x="94" y="104" width="3" height="16" fill="#9aa8b5" />
+          <rect x="101" y="104" width="3" height="16" fill="#9aa8b5" />
+          <rect x="108" y="104" width="3" height="16" fill="#9aa8b5" />
+          <rect x="115" y="104" width="3" height="16" fill="#9aa8b5" />
+        </g>
+      )}
       {look.gpu && <rect x="40" y="112" width="16" height="28" rx="3" fill={pal.trim} />}
+      {look.gpu && look.gpuWired && (
+        <path d="M98 124 C 78 128, 66 126, 56 124" fill="none" stroke="#7dfff2" strokeWidth="2.5" strokeLinecap="round" />
+      )}
       <rect x="78" y="30" width="58" height="52" rx="16" fill={look.plates >= 4 ? `url(#${id}-metal)` : frame.metal} />
       {look.plates >= 4 && <path d="M86 36 h42 l-6 14 h-30 z" fill={shell.trim} />}
       <rect x="92" y="48" width={28 + look.visor * 2} height={10 + Math.min(6, look.visor)} rx="6" fill="#10181c" />
@@ -114,13 +126,8 @@ export function PlayerRig({ look }: { look: RobotLook }) {
       {look.visor >= 5 && <circle cx="107" cy="12" r="5" fill={pal.trim} />}
       <rect x="46" y="108" width="24" height="14" rx="6" fill={pal.dark} />
       <rect x="142" y="102" width="28" height="14" rx="6" fill={covered ? shell.metal : frame.dark} />
-      {look.weaponIds.slice(0, 4).map((weaponId, index) => {
-        const spot = [
-          { x: 166, y: 90 },
-          { x: 150, y: 70 },
-          { x: 28, y: 96 },
-          { x: 24, y: 72 },
-        ][index]
+      {look.weaponIds.map((weaponId, index) => {
+        const spot = hardpoint(index, look.weaponIds.length)
         return <g key={`${weaponId}-${index}`}>{glyph(weaponId, spot.x, spot.y, pal.trim, '#1a120e')}</g>
       })}
     </svg>

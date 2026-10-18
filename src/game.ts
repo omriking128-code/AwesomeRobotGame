@@ -387,19 +387,32 @@ function readAssembly(value: unknown, parts: OwnedPart[]): Assembly | null {
     return raw.filter((item): item is string => typeof item === 'string' && known.has(item))
   }
   const weaponUids = list('weaponUids')
+  const processorUid = uid('processorUid')
+  const gpuUid = uid('gpuUid')
+  const wheelsMounted = record.wheelsMounted === true
+  const weaponsPlaced = record.weaponsPlaced === true && weaponUids.length > 0
+  const plates = clamp(record.plates, 0, 4)
+  const fresh = typeof record.paste === 'number' || typeof record.cooled === 'boolean' || typeof record.wheelBolts === 'number' || typeof record.gpuWired === 'boolean' || typeof record.covered === 'number'
+  const covered = fresh ? clamp(record.covered, 0, 15) : plates >= 4 ? 15 : 0
+  const plateCount = [1, 2, 4, 8].filter((bit) => covered & bit).length
   return {
-    processorUid: uid('processorUid'),
+    processorUid,
+    paste: fresh ? clamp(record.paste, 0, 100) : processorUid ? 100 : 0,
+    cooled: fresh ? record.cooled === true : Boolean(processorUid),
     wheelUid: uid('wheelUid'),
+    wheelBolts: fresh ? clamp(record.wheelBolts, 0, 2) : wheelsMounted ? 2 : 0,
     materialUid: uid('materialUid'),
     osUid: uid('osUid'),
-    gpuUid: uid('gpuUid'),
+    gpuUid,
     gpuSkipped: record.gpuSkipped === true,
+    gpuWired: fresh ? record.gpuWired === true : Boolean(gpuUid),
     weaponUids,
-    wiredUids: list('wiredUids').filter((item) => weaponUids.includes(item)),
-    weaponsPlaced: record.weaponsPlaced === true && weaponUids.length > 0,
-    wheelsMounted: record.wheelsMounted === true,
+    wiredUids: (weaponsPlaced ? weaponUids : list('wiredUids')).filter((item) => weaponUids.includes(item)),
+    weaponsPlaced,
+    wheelsMounted,
     osInstalled: record.osInstalled === true,
-    plates: clamp(record.plates, 0, 4),
+    plates: fresh ? plateCount : plates,
+    covered,
   }
 }
 

@@ -1,26 +1,25 @@
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import type { Assembly, OwnedPart } from '../parts'
 import {
   BUILD_STEPS,
   catalog,
   currentStep,
+  emptyAssembly,
+  hardpoint,
   partByUid,
   processorSlots,
   robotLook,
   stepDone,
 } from '../parts'
 import { PlayerRig } from './PlayerRig'
+import { SmearPad, SpinBolt, usePointerDrag } from './gestures'
 import { playBoot, playSnap, playWire } from '../sound'
 
-type DragState =
-  | { kind: 'processor'; uid: string; name: string; x: number; y: number; startX: number; startY: number; over: boolean }
-  | { kind: 'wire'; x: number; y: number; ox: number; oy: number; startX: number; startY: number; overUid: string | null }
-
-const PORTS = [
-  { x: 176, y: 100 },
-  { x: 160, y: 80 },
-  { x: 34, y: 106 },
-  { x: 34, y: 80 },
+const ZONES: { id: string; bit: number; label: string }[] = [
+  { id: 'chest', bit: 1, label: 'Chest' },
+  { id: 'left', bit: 2, label: 'Left' },
+  { id: 'right', bit: 4, label: 'Right' },
+  { id: 'head', bit: 8, label: 'Head' },
 ]
 
 export function BuildBench({
@@ -37,7 +36,6 @@ export function BuildBench({
   const step = currentStep(assembly)
   const look = robotLook(parts, assembly)
   const slots = processorSlots(parts, assembly)
-  const dragRef = useRef<DragState | null>(null)
   const partsRef = useRef(parts)
   const assemblyRef = useRef(assembly)
   const mutedRef = useRef(muted)
@@ -46,41 +44,7 @@ export function BuildBench({
   assemblyRef.current = assembly
   mutedRef.current = muted
   onChangeRef.current = onChange
-
-  function publish(next: DragState | null) {
-    dragRef.current = next
-    const ghost = document.getElementById('drag-ghost')
-    const line = document.getElementById('wire-live')
-    if (!next) {
-      ghost?.setAttribute('hidden', '')
-      if (line) line.style.display = 'none'
-      document.querySelectorAll('.socket.over, .port.over').forEach((node) => node.classList.remove('over'))
-      return
-    }
-    if (ghost) {
-      ghost.hidden = false
-      ghost.style.left = `${next.x}px`
-      ghost.style.top = `${next.y}px`
-      ghost.textContent = next.kind === 'processor' ? next.name : ''
-      ghost.className = next.kind === 'processor' ? 'drag-ghost chip-ghost' : 'drag-ghost wire-ghost'
-    }
-    if (line && next.kind === 'wire') {
-      line.style.display = 'block'
-      const drawn = line.querySelector('line')
-      drawn?.setAttribute('x1', String(next.ox))
-      drawn?.setAttribute('y1', String(next.oy))
-      drawn?.setAttribute('x2', String(next.x))
-      drawn?.setAttribute('y2', String(next.y))
-    } else if (line) {
-      line.style.display = 'none'
-    }
-    document.querySelectorAll('.socket').forEach((node) => {
-      node.classList.toggle('over', next.kind === 'processor' && next.over)
-    })
-    document.querySelectorAll<HTMLElement>('.port').forEach((node) => {
-      node.classList.toggle('over', next.kind === 'wire' && node.dataset.port === next.overUid && !node.classList.contains('done'))
-    })
-  }
+  const bolts = useRef([assembly.wheelBolts > 0, assembly.wheelBolts > 1])
 
   function play(sound: 'snap' | 'wire' | 'boot') {
     if (mutedRef.current) return
@@ -95,88 +59,69 @@ export function BuildBench({
   }
 
   useEffect(() => {
-    function move(event: PointerEvent) {
-      const current = dragRef.current
-      if (!current) return
-      const drop = dropAt(event.clientX, event.clientY)
-      if (current.kind === 'processor') {
-        publish({ ...current, x: event.clientX, y: event.clientY, over: drop?.dataset.drop === 'processor' })
-      } else {
-        publish({ ...current, x: event.clientX, y: event.clientY, overUid: drop?.dataset.port ?? null })
-      }
-    }
-    function up(event: PointerEvent) {
-      const current = dragRef.current
-      if (!current) return
-      const drop = dropAt(event.clientX, event.clientY)
-      const moved = Math.hypot(event.clientX - current.startX, event.clientY - current.startY)
-      publish(null)
-      if (moved < 12) return
-      if (current.kind === 'processor' && drop?.dataset.drop === 'processor') {
-        const item = partByUid(partsRef.current, current.uid)
-        if (!item) return
-        const count = catalog(item.id).slots
-        const weaponUids = assemblyRef.current.weaponUids.slice(0, count)
+    if (!assembly.osUid || assembly.osInstalled) return
+    const timer = window.setTimeout(() => {
+      const current = assemblyRef.current
+      if (!current.osUid || current.osInstalled) return
+      commit({ ...current, osInstalled: true }, 'boot')
+    }, 2000)
+    return () => window.clearTimeout(timer)
+  }, [assembly.osUid, assembly.osInstalled])
+
+  const { begin } = usePointerDrag({
+    onMove(drag, target) {
+      if (drag.kind !== 'skin' || target?.dataset.drop !== 'zone' || !target.dataset.zone) return
+      const zone = ZONES.find((item) => item.id === target.dataset.zone)
+      if (!zone) return
+      const current = assemblyRef.current
+      const base = current.materialUid === drag.uid ? current.covered : 0
+      const covered = base | zone.bit
+      if (current.materialUid === drag.uid && current.covered === covered) return
+      const plates = [1, 2, 4, 8].filter((bit) => covered & bit).length
+      commit({ ...current, materialUid: drag.uid, covered, plates })
+    },
+    onDrop(drag, target, moved) {
+      if (moved < 12 || !target) return
+      const drop = target.dataset.drop
+      const current = assemblyRef.current
+      if (drag.kind === 'processor' && drop === 'processor') {
+        const count = catalog(partsRef.current.find((item) => item.uid === drag.uid)?.id ?? 'scrap-chip').slots
+        const weaponUids = current.weaponUids.slice(0, count)
         commit({
-          ...assemblyRef.current,
-          processorUid: item.uid,
+          ...current,
+          processorUid: drag.uid,
+          paste: 0,
+          cooled: false,
           weaponUids,
-          wiredUids: assemblyRef.current.wiredUids.filter((uid) => weaponUids.includes(uid)),
+          wiredUids: current.wiredUids.filter((uid) => weaponUids.includes(uid)),
+          weaponsPlaced: false,
         })
       }
-      if (current.kind === 'wire' && drop?.dataset.port) {
-        const uid = drop.dataset.port
-        const bench = assemblyRef.current
-        if (!bench.weaponUids.includes(uid) || bench.wiredUids.includes(uid)) return
-        commit({ ...bench, wiredUids: [...bench.wiredUids, uid] }, 'wire')
+      if (drag.kind === 'cooler' && drop === 'cooler') commit({ ...current, cooled: true })
+      if (drag.kind === 'wheels' && drop === 'axle') {
+        bolts.current = [false, false]
+        commit({ ...current, wheelUid: drag.uid, wheelBolts: 0, wheelsMounted: false })
       }
-    }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
-    window.addEventListener('pointercancel', up)
-    return () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
-      window.removeEventListener('pointercancel', up)
-    }
-  }, [])
+      if (drag.kind === 'weapon' && drop === 'hardpoint') {
+        const open = processorSlots(partsRef.current, current)
+        if (current.weaponUids.includes(drag.uid) || current.weaponUids.length >= open) return
+        const weaponUids = [...current.weaponUids, drag.uid]
+        const owned = partsRef.current.filter((item) => catalog(item.id).kind === 'weapon').length
+        const placed = weaponUids.length >= Math.min(open, owned) && weaponUids.length > 0
+        commit({ ...current, weaponUids, wiredUids: weaponUids, weaponsPlaced: placed })
+      }
+      if (drag.kind === 'gpu' && drop === 'gpu') commit({ ...current, gpuUid: drag.uid, gpuSkipped: false, gpuWired: false })
+      if (drag.kind === 'cover' && drop === 'gpu') commit({ ...current, gpuUid: null, gpuSkipped: true, gpuWired: false })
+      if (drag.kind === 'wire' && drop === 'gpu-port') commit({ ...current, gpuWired: true }, 'wire')
+      if (drag.kind === 'os' && drop === 'os') commit({ ...current, osUid: drag.uid, osInstalled: false })
+      if (drag.kind === 'strip' && drop === 'strip') commit(emptyAssembly())
+    },
+  })
 
-  function beginProcessor(event: ReactPointerEvent, item: OwnedPart) {
-    event.preventDefault()
-    publish({
-      kind: 'processor',
-      uid: item.uid,
-      name: catalog(item.id).name,
-      x: event.clientX,
-      y: event.clientY,
-      startX: event.clientX,
-      startY: event.clientY,
-      over: false,
-    })
-  }
-
-  function beginWire(event: ReactPointerEvent<HTMLButtonElement>) {
-    event.preventDefault()
-    const rect = event.currentTarget.getBoundingClientRect()
-    publish({
-      kind: 'wire',
-      x: event.clientX,
-      y: event.clientY,
-      ox: rect.left + rect.width / 2,
-      oy: rect.top + rect.height / 2,
-      startX: event.clientX,
-      startY: event.clientY,
-      overUid: null,
-    })
-  }
-
-  function snap(next: Assembly, sound: 'snap' | 'wire' | 'boot' = 'snap') {
-    play(sound)
-    onChange(next)
-  }
-
-  const processors = parts.filter((item) => catalog(item.id).kind === 'processor')
-  const wired = assembly.weaponUids.filter((uid) => assembly.wiredUids.includes(uid))
+  const owned = (kind: string) => parts.filter((item) => catalog(item.id).kind === kind)
+  const phase = !assembly.processorUid ? 'seat' : assembly.paste < 100 ? 'paste' : assembly.cooled ? 'done' : 'cool'
+  const looseWeapons = owned('weapon').filter((item) => !assembly.weaponUids.includes(item.uid))
+  const nextPoint = hardpoint(assembly.weaponUids.length, Math.max(slots, 1))
 
   return (
     <section className="build" data-testid="build">
@@ -195,127 +140,163 @@ export function BuildBench({
       <div className="stage">
         <div className="rig-frame">
           <PlayerRig look={look} />
-          <svg className="cable-layer" viewBox="0 0 210 220" aria-hidden="true">
-            {wired.map((uid) => {
-              const index = assembly.weaponUids.indexOf(uid)
-              const spot = portSpot(index, assembly.weaponUids.length)
-              return <line key={uid} x1="107" y1="124" x2={spot.x} y2={spot.y} />
-            })}
-          </svg>
-          {step === 'processor' && (
-            <div className="socket" data-testid="processor-socket" data-drop="processor">
-              Drop here
-            </div>
+          {step === 'processor' && phase === 'seat' && (
+            <div className="socket" data-testid="processor-socket" data-drop="processor">Drop processor</div>
           )}
-          {step === 'wire' && (
+          {step === 'processor' && phase === 'paste' && (
+            <SmearPad testId="paste-pad" label="Smear paste" tone="paste" onDone={() => commit({ ...assemblyRef.current, paste: 100 })} />
+          )}
+          {step === 'processor' && phase === 'cool' && (
+            <div className="socket" data-testid="cooler-socket" data-drop="cooler">Drop cooler</div>
+          )}
+          {step === 'wheels' && !assembly.wheelUid && <div className="axle" data-testid="axle" data-drop="axle">Drop wheels</div>}
+          {step === 'wheels' && assembly.wheelUid && !assembly.wheelsMounted && (
             <>
-              <button type="button" className="wire-source" data-testid="wire-source" onPointerDown={beginWire}>
-                Wire
-              </button>
-              {assembly.weaponUids.map((uid, index) => {
-                const item = partByUid(parts, uid)
-                const done = assembly.wiredUids.includes(uid)
-                const spot = portSpot(index, assembly.weaponUids.length)
-                return (
-                  <div
-                    key={uid}
-                    className={done ? 'port done' : 'port'}
-                    data-testid={`port-${uid}`}
-                    data-port={done ? undefined : uid}
-                    style={{ left: `${(spot.x / 210) * 100}%`, top: `${(spot.y / 220) * 100}%` }}
-                  >
-                    {item ? catalog(item.id).name : 'Port'}
-                  </div>
-                )
-              })}
+              <SpinBolt testId="bolt-0" className="at-left" onDone={() => finishBolt(0)} />
+              <SpinBolt testId="bolt-1" className="at-right" onDone={() => finishBolt(1)} />
             </>
           )}
+          {step === 'weapons' && assembly.weaponUids.length < slots && (
+            <div
+              className="port"
+              data-testid="hardpoint"
+              data-drop="hardpoint"
+              style={{ left: `${(nextPoint.x / 210) * 100}%`, top: `${(nextPoint.y / 220) * 100}%` }}
+            >
+              Drop weapon
+            </div>
+          )}
+          {step === 'gpu' && !assembly.gpuUid && !assembly.gpuSkipped && (
+            <div className="gpu-bay" data-testid="gpu-slot" data-drop="gpu">GPU bay</div>
+          )}
+          {step === 'gpu' && assembly.gpuUid && !assembly.gpuWired && (
+            <>
+              <div className="wire-source" data-testid="wire-source" onPointerDown={(event) => begin(event, { kind: 'wire', name: 'Wire' })}>
+                Wire
+              </div>
+              <div className="port gpu-port" data-testid="gpu-port" data-drop="gpu-port">GPU</div>
+            </>
+          )}
+          {step === 'os' && !assembly.osUid && <div className="os-slot" data-testid="os-slot" data-drop="os">OS slot</div>}
+          {step === 'ready' && (
+            <div className="strip-handle" data-testid="strip-handle" aria-label="Drag the core to the strip bin" onPointerDown={(event) => begin(event, { kind: 'strip', name: 'Core' })} />
+          )}
+          {step === 'shell' &&
+            ZONES.map((zone) => (
+              <div key={zone.id} className={`zone zone-${zone.id} ${assembly.covered & zone.bit ? 'done' : ''}`} data-testid={`zone-${zone.id}`} data-drop="zone" data-zone={zone.id}>
+                {assembly.covered & zone.bit ? 'Covered' : zone.label}
+              </div>
+            ))}
         </div>
+        {assembly.osUid && !assembly.osInstalled && (
+          <div className="boot-bar stage-boot" data-testid="boot-bar">
+            <i />
+            <span>Booting</span>
+          </div>
+        )}
         {step === 'ready' && <p className="ready-banner">Rivet is online.</p>}
       </div>
 
       <div className="step-panel">
-        {step === 'processor' && (
-          <StepCopy title="Drag the processor" body="Pick up a processor and drop it in the socket on Rivet’s chest. It sets speed, intelligence, and how many weapons can be wired.">
-            {processors.length === 0 && <p className="fine">You have no processor. Open the part shop and buy one.</p>}
-            {processors.map((item) => (
-              <div
-                key={item.uid}
-                className="chip"
-                data-testid={`drag-${item.id}`}
-                onPointerDown={(event) => beginProcessor(event, item)}
-              >
+        {step === 'processor' && phase === 'seat' && (
+          <StepCopy title="Drag the processor" body="Drop it in the socket on Rivet’s chest.">
+            {owned('processor').length === 0 && <p className="fine">Buy a processor in the part shop.</p>}
+            {owned('processor').map((item) => (
+              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'processor', uid: item.uid, name: catalog(item.id).name })}>
                 <strong>{catalog(item.id).name}</strong>
-                <span>{catalog(item.id).slots} weapon ports · drag onto the chest</span>
+                <span>Drag onto the chest</span>
               </div>
             ))}
           </StepCopy>
         )}
-        {step === 'wheels' && (
-          <StepCopy title="Mount the wheels" body="Bolt them to the axles. Better wheels, more speed.">
-            {owned(parts, 'wheels').map((item) => (
-              <button key={item.uid} type="button" className="buy can-afford" data-testid="mount-wheels" onClick={() => snap({ ...assembly, wheelUid: item.uid, wheelsMounted: true })}>
-                Bolt on {catalog(item.id).name}
-              </button>
+        {step === 'processor' && phase === 'paste' && (
+          <StepCopy title="Spread thermal paste" body="Hold on the chip and smear paste across it until the socket is covered.">
+            <p className="fine">Keep the pointer down and drag over the whole chip.</p>
+          </StepCopy>
+        )}
+        {step === 'processor' && phase === 'cool' && (
+          <StepCopy title="Seat the cooler" body="Drag the cooler onto the pasted processor.">
+            <div className="chip" data-testid="drag-cooler" onPointerDown={(event) => begin(event, { kind: 'cooler', name: 'Cooler' })}>
+              <strong>Cooler</strong>
+              <span>Drag it onto the chip</span>
+            </div>
+          </StepCopy>
+        )}
+        {step === 'wheels' && !assembly.wheelUid && (
+          <StepCopy title="Bring the wheels" body="Drag a set of wheels onto the axle, then spin the bolts.">
+            {owned('wheels').map((item) => (
+              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'wheels', uid: item.uid, name: catalog(item.id).name })}>
+                <strong>{catalog(item.id).name}</strong>
+                <span>Drag onto the axle</span>
+              </div>
             ))}
+          </StepCopy>
+        )}
+        {step === 'wheels' && assembly.wheelUid && !assembly.wheelsMounted && (
+          <StepCopy title="Spin the bolts" body="Grab each bolt and turn it in a full circle until it tightens.">
+            <p className="fine">Two bolts, one on each wheel.</p>
           </StepCopy>
         )}
         {step === 'weapons' && (
-          <WeaponStep parts={parts} assembly={assembly} slots={slots} onChange={(next) => snap(next)} />
-        )}
-        {step === 'wire' && (
-          <StepCopy title="Drag the wires" body="Grab the wire on the processor and drag it onto each weapon. A weapon with no wire cannot fire.">
-            <ul className="wire-list">
-              {assembly.weaponUids.map((uid) => {
-                const item = partByUid(parts, uid)
-                const done = assembly.wiredUids.includes(uid)
-                return (
-                  <li key={uid} className={done ? 'done' : ''}>
-                    {done ? 'Wired' : 'Drag a wire here'} · {item ? catalog(item.id).name : 'Weapon'}
-                  </li>
-                )
-              })}
-            </ul>
-          </StepCopy>
-        )}
-        {step === 'gpu' && (
-          <StepCopy title="Install the GPU" body="Optional. A GPU gives a small boost to every stat. You can leave the slot empty.">
-            {owned(parts, 'gpu').map((item) => (
-              <button key={item.uid} type="button" className="buy can-afford" data-testid="seat-gpu" onClick={() => snap({ ...assembly, gpuUid: item.uid, gpuSkipped: false })}>
-                Seat {catalog(item.id).name}
-              </button>
+          <StepCopy title="Drag the weapons on" body={`This processor has ${slots} ports. Drag a weapon onto the open hardpoint. Every weapon you own, up to that limit, has to go on.`}>
+            {looseWeapons.length === 0 && <p className="fine">Buy a weapon in the part shop.</p>}
+            {looseWeapons.map((item) => (
+              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'weapon', uid: item.uid, name: catalog(item.id).name })}>
+                <strong>{catalog(item.id).name}</strong>
+                <span>Drag onto the hardpoint</span>
+              </div>
             ))}
-            <button type="button" className="ghost wide" data-testid="skip-gpu" onClick={() => snap({ ...assembly, gpuUid: null, gpuSkipped: true })}>
-              Leave the slot empty
-            </button>
           </StepCopy>
         )}
-        {step === 'os' && (
-          <StepCopy title="Install the OS" body="Boot the system. A better OS makes Rivet more likely to hit and to dodge.">
-            {owned(parts, 'os').map((item) => (
-              <button
-                key={item.uid}
-                type="button"
-                className="buy can-afford"
-                data-testid="install-os"
-                onClick={() => snap({ ...assembly, osUid: item.uid, osInstalled: true }, 'boot')}
-              >
-                Install {catalog(item.id).name}
-              </button>
+        {step === 'gpu' && !assembly.gpuUid && !assembly.gpuSkipped && (
+          <StepCopy title="Seat the GPU" body={owned('gpu').length ? 'Drag the card into the bay on Rivet’s side.' : 'No GPU in the bin. Drag the bay cover over the empty slot, or buy a card in the part shop.'}>
+            {owned('gpu').map((item) => (
+              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'gpu', uid: item.uid, name: catalog(item.id).name })}>
+                <strong>{catalog(item.id).name}</strong>
+                <span>Drag into the bay</span>
+              </div>
             ))}
-            <ol className="boot-lines">
-              <li>Power to the processor.</li>
-              <li>Weapons answer the wire.</li>
-              <li>Rivet opens its eye.</li>
-            </ol>
+            {owned('gpu').length === 0 && (
+              <div className="chip" data-testid="drag-bay-cover" onPointerDown={(event) => begin(event, { kind: 'cover', name: 'Bay cover' })}>
+                <strong>Bay cover</strong>
+                <span>Drag over the empty slot</span>
+              </div>
+            )}
           </StepCopy>
         )}
-        {step === 'shell' && <ShellStep parts={parts} assembly={assembly} onChange={(next) => snap(next)} />}
+        {step === 'gpu' && assembly.gpuUid && !assembly.gpuWired && (
+          <StepCopy title="Wire the GPU" body="Grab the wire on the processor and drag it onto the card.">
+            <p className="fine">The wire has to land on the GPU.</p>
+          </StepCopy>
+        )}
+        {step === 'os' && !assembly.osUid && (
+          <StepCopy title="Slide in the OS" body="Drag the cartridge into the head. It boots itself.">
+            {owned('os').map((item) => (
+              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'os', uid: item.uid, name: catalog(item.id).name })}>
+                <strong>{catalog(item.id).name}</strong>
+                <span>Drag into the head</span>
+              </div>
+            ))}
+          </StepCopy>
+        )}
+        {step === 'os' && assembly.osUid && !assembly.osInstalled && (
+          <StepCopy title="Booting" body="The system is loading. Give it a couple of seconds.">
+            <p className="fine">Power, memory, then the eye.</p>
+          </StepCopy>
+        )}
+        {step === 'shell' && (
+          <StepCopy title="Drag the frame on" body="Pick up a shell and drag it across the chest, both shoulders, and the head.">
+            {owned('material').map((item) => (
+              <div key={item.uid} className="chip" data-testid={`drag-${item.id}`} onPointerDown={(event) => begin(event, { kind: 'skin', uid: item.uid, name: catalog(item.id).name })}>
+                <strong>{catalog(item.id).name}</strong>
+                <span>Drag across the whole body</span>
+              </div>
+            ))}
+          </StepCopy>
+        )}
         {step === 'ready' && (
-          <StepCopy title="Ready for the pit" body="Rivet is wired, skinned, and booted. You can strip the frame if you want to rebuild with new parts.">
-            <button type="button" className="ghost wide" data-testid="strip" onClick={() => onChange({ ...assembly, processorUid: null, wheelUid: null, materialUid: null, osUid: null, gpuUid: null, gpuSkipped: false, weaponUids: [], wiredUids: [], weaponsPlaced: false, wheelsMounted: false, osInstalled: false, plates: 0 })}>
-              Strip the frame
-            </button>
+          <StepCopy title="Ready for the pit" body="Rivet is pasted, bolted, armed, and skinned. Drag the core into the bin if you want to take the build apart.">
+            <div className="scrap-bin" data-testid="strip-bin" data-drop="strip">Strip bin</div>
           </StepCopy>
         )}
       </div>
@@ -325,117 +306,11 @@ export function BuildBench({
       </svg>
     </section>
   )
-}
 
-function dropAt(x: number, y: number): HTMLElement | null {
-  const node = document.elementFromPoint(x, y)
-  if (!(node instanceof Element)) return null
-  const hit = node.closest('[data-drop], [data-port]')
-  return hit instanceof HTMLElement ? hit : null
-}
-
-function portSpot(index: number, count: number): { x: number; y: number } {
-  if (index < PORTS.length && count <= PORTS.length) return PORTS[index]
-  const angle = (index / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2
-  return { x: 105 + Math.cos(angle) * 78, y: 118 + Math.sin(angle) * 72 }
-}
-
-function owned(parts: OwnedPart[], kind: string): OwnedPart[] {
-  return parts.filter((item) => catalog(item.id).kind === kind)
-}
-
-function WeaponStep({
-  parts,
-  assembly,
-  slots,
-  onChange,
-}: {
-  parts: OwnedPart[]
-  assembly: Assembly
-  slots: number
-  onChange: (assembly: Assembly) => void
-}) {
-  const choices = owned(parts, 'weapon').filter((item) => !assembly.weaponUids.includes(item.uid))
-  const open = Math.max(0, slots - assembly.weaponUids.length)
-  return (
-    <StepCopy title="Place the weapons" body={`This processor can control ${slots} weapons. Place at least one, then move on.`}>
-      <div className="slot-row">
-        {Array.from({ length: slots }, (_, index) => {
-          const uid = assembly.weaponUids[index]
-          const item = partByUid(parts, uid ?? null)
-          return (
-            <span key={index} className={uid ? 'slot filled' : 'slot'} data-testid={`slot-${index}`}>
-              {item ? catalog(item.id).name : `Port ${index + 1}`}
-            </span>
-          )
-        })}
-      </div>
-      {open > 0 &&
-        choices.map((item) => (
-          <button
-            key={item.uid}
-            type="button"
-            className="buy can-afford"
-            data-testid={`pick-${item.id}`}
-            onClick={() => onChange({ ...assembly, weaponUids: [...assembly.weaponUids, item.uid] })}
-          >
-            Mount {catalog(item.id).name}
-          </button>
-        ))}
-      <button
-        type="button"
-        className="ghost wide"
-        data-testid="weapons-done"
-        disabled={assembly.weaponUids.length === 0}
-        onClick={() => onChange({ ...assembly, weaponsPlaced: true })}
-      >
-        Weapons are seated
-      </button>
-    </StepCopy>
-  )
-}
-
-function ShellStep({
-  parts,
-  assembly,
-  onChange,
-}: {
-  parts: OwnedPart[]
-  assembly: Assembly
-  onChange: (assembly: Assembly) => void
-}) {
-  const shells = owned(parts, 'material')
-  const selected = assembly.materialUid
-  const plates = ['Chest plate', 'Left pauldron', 'Right pauldron', 'Head cap']
-  return (
-    <StepCopy title="Cover the frame" body="Four plates close the shell. The material sets Rivet’s health and armor.">
-      {shells.map((item) => (
-        <button
-          key={item.uid}
-          type="button"
-          className={selected === item.uid ? 'buy can-afford' : 'buy'}
-          data-testid={`use-${item.id}`}
-          onClick={() => onChange({ ...assembly, materialUid: item.uid, plates: selected === item.uid ? assembly.plates : 0 })}
-        >
-          Use {catalog(item.id).name}
-        </button>
-      ))}
-      <div className="slot-row">
-        {plates.map((label, index) => (
-          <button
-            key={label}
-            type="button"
-            className={assembly.plates > index ? 'slot filled' : 'slot plate'}
-            data-testid={`plate-${index}`}
-            disabled={!selected || assembly.plates !== index}
-            onClick={() => onChange({ ...assembly, plates: index + 1 })}
-          >
-            {assembly.plates > index ? 'Set' : label}
-          </button>
-        ))}
-      </div>
-    </StepCopy>
-  )
+  function finishBolt(index: number) {
+    bolts.current[index] = true
+    if (bolts.current.every(Boolean)) commit({ ...assemblyRef.current, wheelBolts: 2, wheelsMounted: true })
+  }
 }
 
 function StepCopy({ title, body, children }: { title: string; body: string; children: ReactNode }) {
