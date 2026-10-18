@@ -357,6 +357,33 @@ h3 { margin: 0; font-size: 1.05rem; }
   border-top: 1px solid rgba(255, 226, 190, 0.08);
 }
 
+.dock-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.dock-row .deploy { flex: 1; }
+
+.shop-launch {
+  border-radius: 18px;
+  padding: 14px 16px;
+  color: #1a120b;
+  background: #ffb020;
+  box-shadow: 0 6px 0 #8a4d00;
+  font-family: "Russo One", Impact, sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.shop-launch.slim {
+  border-radius: 999px;
+  padding: 8px 14px;
+  box-shadow: 0 3px 0 #8a4d00;
+  font-size: 0.92rem;
+}
+
 .deploy {
   width: 100%;
   border-radius: 18px;
@@ -700,7 +727,142 @@ h3 { margin: 0; font-size: 1.05rem; }
     radial-gradient(circle at 50% 18%, rgba(255, 196, 92, 0.2), transparent 42%),
     #17110d;
 }
-.stage .robot-svg { width: min(260px, 70%); }
+.rig-frame {
+  position: relative;
+  width: min(280px, 88%);
+}
+.rig-frame .robot-svg { width: 100%; display: block; }
+.cable-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.cable-layer line {
+  stroke: #7dfff2;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.socket {
+  position: absolute;
+  left: 33%;
+  top: 39%;
+  width: 35%;
+  height: 34%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: 2px dashed #ffb020;
+  border-radius: 18px;
+  background: rgba(255, 176, 32, 0.18);
+  color: #ffb020;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  pointer-events: auto;
+}
+.socket.over {
+  background: rgba(255, 176, 32, 0.55);
+  color: #1a120b;
+  border-style: solid;
+}
+.wire-source {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  z-index: 3;
+  width: 58px;
+  height: 58px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #7dfff2;
+  color: #10211e;
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 6px rgba(125, 255, 242, 0.28);
+  touch-action: none;
+  cursor: grab;
+}
+.port {
+  position: absolute;
+  z-index: 3;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 50%;
+  border: 2px solid #7dfff2;
+  background: rgba(16, 24, 28, 0.92);
+  color: #7dfff2;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.1;
+}
+.port.over { background: #7dfff2; color: #10211e; }
+.port.done { background: #9be7c4; color: #10211e; border-color: #9be7c4; }
+.chip {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: #1a120b;
+  background: #ffb020;
+  box-shadow: 0 4px 0 #8a4d00;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.chip span { font-size: 0.82rem; font-weight: 700; }
+.chip:active { cursor: grabbing; }
+.drag-ghost {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  transform: translate(-50%, -70%);
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.drag-ghost[hidden] { display: none; }
+.chip-ghost { background: #ffb020; color: #1a120b; }
+.wire-ghost {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  background: #7dfff2;
+  color: transparent;
+  box-shadow: 0 0 0 6px rgba(125, 255, 242, 0.35);
+}
+.wire-live {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 55;
+  pointer-events: none;
+  overflow: visible;
+}
+.wire-live line {
+  stroke: #7dfff2;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.wire-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.wire-list li {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  color: #d9cbb8;
+}
+.wire-list li.done { color: var(--mint); }
 .ready-banner {
   position: absolute;
   bottom: 16px;
@@ -795,6 +957,8 @@ h3 { margin: 0; font-size: 1.05rem; }
 
 @media (max-width: 860px) {
   .garage-grid, .primer, .upgrade-grid, .build, .repair-bench { grid-template-columns: 1fr; }
+  .dock-row { flex-direction: column; }
+  .shop-launch { width: 100%; }
   .topbar { flex-direction: column; align-items: flex-start; }
   .ring { min-height: 380px; padding-inline: 6px; }
   .robot-svg { width: min(180px, 42vw); }

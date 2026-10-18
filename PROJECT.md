@@ -6,7 +6,7 @@ Scrap Ring
 
 ## One sentence
 
-Build Rivet from shop parts, wire the robot together, and spend winnings on better parts and repairs.
+Build Rivet from shop parts, drag the processor and wires into place, and spend winnings on better parts.
 
 ## What the player does over and over
 
@@ -23,7 +23,8 @@ There are twenty fights. Each win unlocks a harder robot and pays money. Rivet s
 - Intelligence raises the chance to hit and to dodge, and a smarter processor picks the better weapon.
 - Each weapon has its own animation and its own way of dealing damage.
 - Win to earn money and unlock the next level. Lose and you stay on that level.
-- Parts wear out. Each kind has its own repair. A dead part must be replaced.
+- Drag the processor into the chest, then drag a wire from it onto each weapon.
+- Parts wear out. Each kind has its own repair, and the repair is free. A dead part must be replaced.
 - Selling a part returns 75% of the price.
 
 ## Later ideas

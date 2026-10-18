@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Save } from '../game'
-import { catalog, installedUids, partByUid, repairCost, repairLabel, type PartKind } from '../parts'
+import { catalog, installedUids, partByUid, repairLabel, type PartKind } from '../parts'
 import { playSnap } from '../sound'
 
 export function RepairBench({
@@ -24,13 +24,11 @@ export function RepairBench({
     <section className="repair-bench" data-testid="repair-bench">
       <div className="repair-list">
         <h2>Repair bench</h2>
-        <p className="fine">Each part wears out in its own way. Fix it before it dies. A dead part has to come off and be replaced.</p>
+        <p className="fine">Repairs are free. Do the job and the part is fixed. If a part hits 0%, it is dead and you have to buy a new one in the part shop.</p>
         <div className="catalog">
         {installed.map((part) => {
           const item = catalog(part.id)
-          const cost = repairCost(part)
           const dead = part.durability <= 0
-          const afford = cost > 0 && save.money >= cost
           return (
             <article key={part.uid} className="part-card slim">
               <header>
@@ -45,17 +43,16 @@ export function RepairBench({
                 <button type="button" className="buy can-afford" data-testid={`replace-${part.uid}`} onClick={() => onUnequip(part.uid)}>
                   Remove the dead part
                 </button>
-              ) : cost === 0 ? (
+              ) : part.durability >= 100 ? (
                 <p className="fine">This part is fine.</p>
               ) : (
                 <button
                   type="button"
-                  className={afford ? 'buy can-afford' : 'buy'}
-                  disabled={!afford}
+                  className="buy can-afford"
                   data-testid={`repair-${part.uid}`}
                   onClick={() => setJob(part.uid)}
                 >
-                  {repairLabel(item.kind)} · {cost}
+                  {repairLabel(item.kind)}
                 </button>
               )}
             </article>

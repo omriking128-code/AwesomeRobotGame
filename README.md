@@ -4,7 +4,7 @@
 
 ## Scrap Ring
 
-You start with a pile of parts. Build Rivet on the bench: seat a processor, mount wheels, place and wire weapons, install an OS, and cover the frame with material. A GPU is optional. Win fights to buy better parts. Worn parts need their own repair. Dead parts have to be replaced. Selling a part returns 75% of its price.
+You start with a pile of parts. The amber Part shop button is on the bench and in the header. Build Rivet by dragging the processor into the chest and dragging a wire from the processor onto each weapon, then mount the wheels, install an OS, and cover the frame. A GPU is optional. Worn parts are repaired for free. A dead part has to be bought again. Selling a part returns 75% of its price.
 
 ## איך מתחילים לעבוד
 

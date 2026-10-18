@@ -225,12 +225,6 @@ export function sellValue(price: number): number {
   return Math.round(price * 0.75)
 }
 
-export function repairCost(part: OwnedPart): number {
-  if (part.durability <= 0 || part.durability >= 100) return 0
-  const missing = (100 - part.durability) / 100
-  return Math.max(1, Math.round(catalog(part.id).price * missing * 0.35))
-}
-
 export function repairLabel(kind: PartKind): string {
   if (kind === 'processor') return 'Recalibrate'
   if (kind === 'weapon') return 'Hone the edge'
@@ -380,11 +374,8 @@ export function sellPart<T extends Bench>(save: T, uid: string): T {
 export function repairPart<T extends Bench>(save: T, uid: string): T {
   const owned = partByUid(save.parts, uid)
   if (!owned || owned.durability <= 0 || owned.durability >= 100) return save
-  const cost = repairCost(owned)
-  if (save.money < cost) return save
   return {
     ...save,
-    money: save.money - cost,
     parts: save.parts.map((item) => (item.uid === uid ? { ...item, durability: 100 } : item)),
   }
 }
@@ -433,10 +424,10 @@ export function applyWear<T extends Bench>(save: T, hitsTaken: number, firedUids
 export type BuildStep = 'processor' | 'wheels' | 'weapons' | 'wire' | 'gpu' | 'os' | 'shell'
 
 export const BUILD_STEPS: { id: BuildStep; label: string }[] = [
-  { id: 'processor', label: 'Seat the processor' },
+  { id: 'processor', label: 'Drag in the processor' },
   { id: 'wheels', label: 'Mount the wheels' },
   { id: 'weapons', label: 'Place the weapons' },
-  { id: 'wire', label: 'Wire the weapons' },
+  { id: 'wire', label: 'Drag the wires' },
   { id: 'gpu', label: 'Install the GPU' },
   { id: 'os', label: 'Install the OS' },
   { id: 'shell', label: 'Cover with material' },

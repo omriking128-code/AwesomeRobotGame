@@ -6,7 +6,6 @@ import {
   isInstalled,
   partByUid,
   partsOf,
-  repairCost,
   sellValue,
   type PartKind,
 } from '../parts'
@@ -16,6 +15,8 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
   const hint = PART_KINDS.find((item) => item.id === kind)?.hint
   return (
     <section className="shop" data-testid="shop">
+      <h2>Part shop</h2>
+      <p className="fine">Buy parts here, then drag them onto Rivet on the build bench. Selling returns 75% of the price. Repairs are free until a part dies.</p>
       <div className="tab-row" role="tablist">
         {PART_KINDS.map((item) => (
           <button
@@ -54,7 +55,6 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
               </button>
               {owned.map((part) => {
                 const installed = isInstalled(save.assembly, part.uid)
-                const cost = repairCost(part)
                 return (
                   <div key={part.uid} className="owned-row">
                     <span className="dur" aria-hidden="true">
@@ -68,7 +68,6 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
                         Sell · {sellValue(catalog(part.id).price)}
                       </button>
                     )}
-                    {cost > 0 && <span className="tiny-note">Repair later · {cost}</span>}
                   </div>
                 )
               })}

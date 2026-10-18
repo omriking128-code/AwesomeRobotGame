@@ -265,7 +265,7 @@ function App() {
           </p>
           {phase !== 'fight' && phase !== 'result' && (
             <>
-              <button type="button" className="ghost" data-testid="open-shop" onClick={() => setPhase('shop')}>Shop</button>
+              <button type="button" className="shop-launch slim" data-testid="open-shop" onClick={() => setPhase('shop')}>Part shop</button>
               <button type="button" className="ghost" data-testid="open-build" onClick={() => setPhase('build')}>Build</button>
               <button type="button" className="ghost" data-testid="open-repair" onClick={() => setPhase('repair')}>Repair</button>
             </>
@@ -364,22 +364,28 @@ function App() {
 
       <footer className="dock">
         {phase === 'pit' && (
-          <button type="button" className="deploy" data-testid="deploy" onClick={deploy}>
-            <span>{ready ? (opponent.rematch ? 'Defend your title' : 'Deploy into the ring') : 'Build Rivet first'}</span>
-            <small>
-              {ready
-                ? `${opponent.rematch ? 'Rematch' : `Fight ${opponent.number}`} · ${opponent.level.name} · win ${opponent.level.reward} money`
-                : blockers[0]}
-            </small>
-          </button>
+          <div className="dock-row">
+            <button type="button" className="shop-launch" data-testid="dock-shop" onClick={() => setPhase('shop')}>Part shop</button>
+            <button type="button" className="deploy" data-testid="deploy" onClick={deploy}>
+              <span>{ready ? (opponent.rematch ? 'Defend your title' : 'Deploy into the ring') : 'Build Rivet first'}</span>
+              <small>
+                {ready
+                  ? `${opponent.rematch ? 'Rematch' : `Fight ${opponent.number}`} · ${opponent.level.name} · win ${opponent.level.reward} money`
+                  : blockers[0]}
+              </small>
+            </button>
+          </div>
         )}
         {phase === 'shop' && (
-          <button type="button" className="deploy" onClick={() => setPhase(ready ? 'pit' : 'build')}>Back to the pit</button>
+          <button type="button" className="deploy" onClick={() => setPhase(ready ? 'pit' : 'build')}>Back to the bench</button>
         )}
         {phase === 'build' && (
-          <button type="button" className="deploy" data-testid="build-done" onClick={() => setPhase('pit')}>
-            {ready ? 'Rivet is ready' : 'Back to the pit'}
-          </button>
+          <div className="dock-row">
+            <button type="button" className="shop-launch" data-testid="dock-shop" onClick={() => setPhase('shop')}>Part shop</button>
+            <button type="button" className="deploy" data-testid="build-done" onClick={() => setPhase('pit')}>
+              {ready ? 'Rivet is ready' : 'Back to the pit'}
+            </button>
+          </div>
         )}
         {phase === 'repair' && (
           <button type="button" className="deploy" onClick={() => setPhase('pit')}>Back to the pit</button>
