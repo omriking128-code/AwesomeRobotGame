@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { RobotFigure } from './components/RobotFigure'
 import { PlayerRig } from './components/PlayerRig'
+import { BenchCanvas } from './components/BenchCanvas'
 import { Shop } from './components/Shop'
 import { BuildBench } from './components/BuildBench'
 import { RepairBench } from './components/RepairBench'
@@ -252,7 +253,7 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
+        <div className="brand">
           <p className="eyebrow">Robot pit</p>
           <h1>Scrap Ring</h1>
         </div>
@@ -264,6 +265,8 @@ function App() {
             <span>Money</span>
             <strong>{save.money}</strong>
           </p>
+        </div>
+        <nav className="nav">
           {phase !== 'fight' && phase !== 'result' && (
             <>
               <button type="button" className="shop-launch slim" data-testid="open-shop" onClick={() => setPhase('shop')}>Part shop</button>
@@ -280,16 +283,15 @@ function App() {
             {muted ? 'Sound off' : 'Sound on'}
           </button>
           <button type="button" className="ghost" onClick={askReset}>
-            {resetArmed ? 'Tap again to reset' : 'Reset'}
+            {resetArmed ? 'Tap again' : 'Reset'}
           </button>
-        </div>
+        </nav>
       </header>
 
       <main>
         {phase === 'pit' && (
           <Pit
             save={save}
-            look={look}
             stats={stats}
             ready={ready}
             blockers={blockers}
@@ -407,7 +409,6 @@ function App() {
 
 function Pit({
   save,
-  look,
   stats,
   ready,
   blockers,
@@ -418,7 +419,6 @@ function Pit({
   bestPower,
 }: {
   save: Save
-  look: ReturnType<typeof robotLook>
   stats: ReturnType<typeof playerStats>
   ready: boolean
   blockers: string[]
@@ -435,14 +435,26 @@ function Pit({
       {!ready && (
         <ol className="primer">
           <li>The shop gave you a starter pile of parts.</li>
-          <li>Build Rivet: wire the weapons, boot the OS, then close the shell.</li>
+          <li>On the bench, pick each part up and fasten it. Turn Rivet to see the sockets.</li>
           <li>Win money, buy better parts, and pay to repair what the fight breaks.</li>
         </ol>
       )}
       <div className="garage-grid">
         <section className="panel bay">
           <div className="bay-stage">
-            <PlayerRig look={look} />
+            <BenchCanvas
+              interactive={false}
+              snapshot={{
+                mode: 'pit',
+                parts: save.parts,
+                assembly: save.assembly,
+                interact: { type: 'idle' },
+                tray: [],
+                hot: [],
+                denyUids: [],
+                focusId: null,
+              }}
+            />
           </div>
           <div className="bay-copy">
             <h2>Rivet</h2>

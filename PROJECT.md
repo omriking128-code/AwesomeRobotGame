@@ -6,7 +6,7 @@ Scrap Ring
 
 ## One sentence
 
-Build Rivet by dragging, smearing, and spinning parts into place, then spend winnings on better parts.
+Build Rivet on a 3D bench by seating, pasting, screwing, and plugging parts, then spend winnings on better parts.
 
 ## What the player does over and over
 
@@ -23,8 +23,8 @@ There are twenty fights. Each win unlocks a harder robot and pays money. Rivet s
 - Intelligence raises the chance to hit and to dodge, and a smarter processor picks the better weapon.
 - Each weapon has its own animation and its own way of dealing damage.
 - Win to earn money and unlock the next level. Lose and you stay on that level.
-- Drag the processor in, smear thermal paste, and seat a cooler. Spin the wheel bolts. Drag weapons, the GPU, and the frame into place. The OS boots on its own.
-- Repairs are hands-on: scrub, spin, hone, weld, or reseat. None of them are a single click. The price is half the part’s cost, scaled by how much durability it lost.
+- On the 3D bench, seat the processor, smear thermal paste, and mount a cooler. Turn the wheel screws. Mount weapons, plug in the GPU, and close the shell plates. The OS boots on its own.
+- Repairs happen on the same bench: pull the part, scrub, turn screws, hone, weld, or reseat it. None of them are a single click. The price is half the part’s cost, scaled by how much durability it lost.
 - Parts wear out. Each kind has its own repair. A dead part must be replaced.
 - Selling a part returns 75% of the price.
 

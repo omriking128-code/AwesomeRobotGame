@@ -4,7 +4,7 @@
 
 ## Scrap Ring
 
-You start with a pile of parts. The amber Part shop button is on the bench and in the header. Build Rivet by dragging parts into place: paste and cool the processor, spin the wheel bolts, drag the weapons on, wire the GPU, boot the OS, and drag the frame across the body. A repair costs half the part’s price, scaled by how damaged it is. A dead part has to be bought again. Selling a part returns 75% of its price.
+You start with a pile of parts. The amber Part shop button is in the header and on the dock. The build and repair benches are a 3D workshop: pick parts up, seat them, spread paste, turn screws, and plug in the cable. A repair costs half the part’s price, scaled by how damaged it is. A dead part has to be bought again. Selling a part returns 75% of its price. This version uses three.js, so run `npm install` once before `npm run dev`.
 
 ## איך מתחילים לעבוד
 

@@ -17,7 +17,7 @@ export function Shop({ save, onBuy, onSell }: { save: Save; onBuy: (id: string) 
   return (
     <section className="shop" data-testid="shop">
       <h2>Part shop</h2>
-      <p className="fine">Buy parts here, then drag them onto Rivet. A repair costs half the part’s price, scaled by how broken it is. A dead part has to be replaced. Selling returns 75%.</p>
+      <p className="fine">Buy parts here, then seat them on the bench. A repair costs half the part’s price, scaled by how broken it is. A dead part has to be replaced. Selling returns 75%.</p>
       <div className="tab-row" role="tablist">
         {PART_KINDS.map((item) => (
           <button
